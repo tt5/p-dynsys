@@ -1,11 +1,13 @@
-# Reservoir Computing
+# Notes
+
+## Reservoir Computing
 
 Simulates dynamic systems.
 
-# Delay Differential Equations
+## Delay Differential Equations
 
 history function (initial function)
 
-# Floquet Theory
+## Floquet Theory
 
 Floquet multipliers (Eigenvalues).
