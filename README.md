@@ -10,4 +10,8 @@ history function (initial function)
 
 ## Floquet Theory
 
-Floquet multipliers (Eigenvalues).
+Floquet multipliers (Eigenvalues). Linear, nonlinear.
+
+## Dynamical System
+
+Lyapunov exponent
