@@ -11,9 +11,7 @@ https://www.youtube.com/@gabororosz5703/videos
 
 # Floquet Theory
 
-https://www.numberanalytics.com/blog/ultimate-guide-floquet-theory-periodic-differential-equations  
 https://grk2905.de/wp-content/uploads/2025/05/Floquet_SS25.pdf  
-https://www.cfm.brown.edu/people/dobrush/am34/Mathematica/ch2/floquet.html  
 https://boulderschool.yale.edu/sites/default/files/files/floquetlecture_Konrad%20Viebahn.pdf  
 
 # Dynamical Systems

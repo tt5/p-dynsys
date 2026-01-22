@@ -1,5 +1,15 @@
 # Notes
 
+Reservoir Computing: Simulates dynamic systems.
+
+Floquet Theory:
+
+Floquet multipliers (Eigenvalues). Linear, nonlinear.
+
+## Delay Differential Equations
+
+history function (initial function)
+
 ## Jupyter Notebook
 
 <ESC-M> make markdown cell
