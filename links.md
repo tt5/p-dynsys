@@ -2,17 +2,12 @@
 
 https://arxiv.org/pdf/2303.09042  
 
-multifunctionality:  
-https://arxiv.org/pdf/2408.15400  
-https://arxiv.org/pdf/2504.12695  
-
 Random Controlled Differential Equations 
 https://arxiv.org/pdf/2512.23670  
 
 # Delay Differential Equation
 
 https://www.youtube.com/@gabororosz5703/videos
-https://arxiv.org/pdf/2508.16469  
 
 # Floquet Theory
 
@@ -23,25 +18,17 @@ https://boulderschool.yale.edu/sites/default/files/files/floquetlecture_Konrad%2
 
 # Dynamical Systems
 
-https://arxiv.org/pdf/2208.05349  
 https://arxiv.org/pdf/2407.09545  
 https://arxiv.org/pdf/2108.10691  
-https://en.wikipedia.org/wiki/Kuramoto_model
-https://en.wikipedia.org/wiki/Tent_map
 
 # Complexity
 
 https://en.wikipedia.org/wiki/Stochastic_matrix  
 https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv_complexity
 
-# Cellular Neural Network
-
-https://en.wikipedia.org/wiki/Cellular_neural_network
-
 # Other
 
 https://github.com/blues0910/IB2d  
-https://chaosbook.org/  
 https://en.wikipedia.org/wiki/Watts%E2%80%93Strogatz_model  
 Dan Lucas, Keele University, Stabilisation of exact coherent structures by time-delay feedback
 https://www.youtube.com/watch?v=NFAaaAizmH8  
