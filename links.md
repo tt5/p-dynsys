@@ -38,8 +38,14 @@ https://en.wikipedia.org/wiki/Chip-firing_game
 https://www.youtube.com/watch?v=_l9PDjqQSII
 https://www.youtube.com/watch?v=0GzG2NTCYmI
 https://www.youtube.com/watch?v=u2quTAv-B6Y
+https://www.youtube.com/watch?v=aEXZSK0kUio
 
 # Predator-Prey
 
 https://www.youtube.com/watch?v=HTOWDXT5Ti4
 https://onlinelibrary.wiley.com/doi/full/10.1155/2020/7596394
+https://www.youtube.com/watch?v=DDEvlLa9z_U
+
+# Hopf Bifurcation
+
+https://www.ucl.ac.uk/~ucesgvd/hopf.pdf

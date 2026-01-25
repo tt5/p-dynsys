@@ -18,7 +18,7 @@ end
 
 for i in 0:800
   tspan = (0.0, 400.0)
-  p = [1.6, 0.5, 0.0207, 1.3, 1]
+  p = [1.6, 0.6, 0.0207, 1.3, 0.9]
   u0 = [0.0001+i/1000, 0.1]
   prob = DE.ODEProblem(bifurk!,u0,tspan,p)
   sol = DE.solve(prob)
