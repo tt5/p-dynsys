@@ -8,6 +8,7 @@ https://arxiv.org/pdf/2512.23670
 # Delay Differential Equation
 
 https://www.youtube.com/@gabororosz5703/videos
+https://arxiv.org/pdf/2312.17588
 
 # Floquet Theory
 
@@ -34,3 +35,11 @@ https://www.youtube.com/watch?v=NFAaaAizmH8
 https://www.youtube.com/watch?v=H1lFg3g_ICs  
 https://en.wikipedia.org/wiki/Cellular_automaton  
 https://en.wikipedia.org/wiki/Chip-firing_game  
+https://www.youtube.com/watch?v=_l9PDjqQSII
+https://www.youtube.com/watch?v=0GzG2NTCYmI
+https://www.youtube.com/watch?v=u2quTAv-B6Y
+
+# Predator-Prey
+
+https://www.youtube.com/watch?v=HTOWDXT5Ti4
+https://onlinelibrary.wiley.com/doi/full/10.1155/2020/7596394
