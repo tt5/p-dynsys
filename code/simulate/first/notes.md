@@ -4,15 +4,16 @@
 
 ports 8000, 8001
 
-different terminals:
-
 `fluent-bit -c n1.conf`
 `fluent-bit -c n2.conf`
-`fluent-bit -c n3.conf`
 
-then start it with `echo "1" >> fifo`
+`echo '{"value1": 1.0, "value2": 0.5}' >> fifo`
 
-# Sample Script
+`fluent-bit -c n3.conf > predator_prey.dat`
+
+`gnuplot -p plot.gp`
+
+# Lua Script Behavior
 
 Script Loading:
 The script is loaded once when Fluent Bit starts
