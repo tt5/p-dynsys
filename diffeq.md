@@ -1,3 +1,0 @@
-# Notes
-
-change of variable
