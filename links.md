@@ -31,15 +31,18 @@ https://github.com/blues0910/IB2d
 https://en.wikipedia.org/wiki/Watts%E2%80%93Strogatz_model  
 Dan Lucas, Keele University, Stabilisation of exact coherent structures by time-delay feedback
 https://www.youtube.com/watch?v=NFAaaAizmH8  
-2 soliton waves launched by a wavemaker in a tank
+2 soliton waves launched by a wavemaker in a tank  
 https://www.youtube.com/watch?v=H1lFg3g_ICs  
 https://en.wikipedia.org/wiki/Cellular_automaton  
+https://www.youtube.com/watch?v=_l9PDjqQSII  
+https://www.youtube.com/watch?v=0GzG2NTCYmI  
+https://www.youtube.com/watch?v=u2quTAv-B6Y  
+https://www.youtube.com/watch?v=aEXZSK0kUio  
+http://www.sliderules.mysterysystem.com/?n=Cloud+Puffs&c=.AABC4DQEgD5.BCA_9GFAfAP.CAAAAAAAAAA.D-__-8B9_A_.ECBKHI.F__.G_wAA_5kA__8AAP8FAP9mAP__AGb_MwD_zAD__wCZ____AAAA  
+
+# Sandpiles
+
 https://en.wikipedia.org/wiki/Chip-firing_game  
-https://www.youtube.com/watch?v=_l9PDjqQSII
-https://www.youtube.com/watch?v=0GzG2NTCYmI
-https://www.youtube.com/watch?v=u2quTAv-B6Y
-https://www.youtube.com/watch?v=aEXZSK0kUio
-http://www.sliderules.mysterysystem.com/?n=Cloud+Puffs&c=.AABC4DQEgD5.BCA_9GFAfAP.CAAAAAAAAAA.D-__-8B9_A_.ECBKHI.F__.G_wAA_5kA__8AAP8FAP9mAP__AGb_MwD_zAD__wCZ____AAAA
 
 # Predator-Prey, consumer-resource
 
