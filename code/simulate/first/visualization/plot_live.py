@@ -11,6 +11,8 @@ from collections import deque
 import numpy as np
 import os
 import time
+import asyncio
+import threading
 
 class LivePlot:
     def __init__(self, max_points=1000):
@@ -27,17 +29,34 @@ class LivePlot:
         self.ax.grid(True)
         self.line_count = 0
         
-    def write_to_fifo(self, record):
-        """Write JSON record to fifo"""
+        # Start the async event loop in a thread
+        self.loop = asyncio.new_event_loop()
+        self.thread = threading.Thread(target=self._run_event_loop, daemon=True)
+        self.thread.start()
+        
+    def _run_event_loop(self):
+        """Run the event loop in a separate thread"""
+        asyncio.set_event_loop(self.loop)
+        self.loop.run_forever()
+        
+    async def async_write_to_fifo(self, record):
+        """Async version of write_to_fifo"""
         try:
             fifo_path = "/home/n/data/p/dynsys/code/simulate/first/fifo"
             if os.path.exists(fifo_path):
-                time.sleep(10)  # 1 second delay before writing
-                json_str = json.dumps(record)
-                #os.system(f'echo \'{json_str}\' > {fifo_path}')
-                os.system(f'''bash /home/n/data/p/dynsys/code/simulate/first/myscript.sh''')
+                await asyncio.sleep(10)  # 10 second delay
+                # Use subprocess instead of os.system for better control
+                import subprocess
+                json_data = '{"value1":1.0,"value2":0.5,"source":"injected1"}'
+                subprocess.run(['echo', json_data], stdout=open(fifo_path, 'w'), check=True)
         except Exception as e:
             pass  # Silently ignore fifo write errors
+        
+    def write_to_fifo(self, record):
+        """Write JSON record to fifo - runs asynchronously"""
+        if not self.loop.is_running():
+            return
+        asyncio.run_coroutine_threadsafe(self.async_write_to_fifo(record), self.loop)
         
     def update(self, frame):
         # Read a line from stdin
