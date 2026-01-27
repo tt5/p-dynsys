@@ -1,6 +1,8 @@
 local values = {}
 local window_size = 10  -- Average over last 10 values
 local counter = 0
+local message_times = {}  -- Store timestamps of recent messages
+local max_rate = 5  -- Maximum messages per second
 
 function average_values(tag, timestamp, record)
     counter = counter + 1
@@ -41,8 +43,22 @@ function average_values(tag, timestamp, record)
     record.value1 = sum1 / #values[source].v1
     record.value2 = sum2 / #values[source].v2
     
-    -- Drop every second message after calculating average
-    if counter % 2 == 0 then
+    -- Calculate current message rate and limit if needed
+    local current_time = os.time()
+    table.insert(message_times, current_time)
+    
+    -- Remove messages older than 1 second
+    local i = 1
+    while i <= #message_times do
+        if current_time - message_times[i] >= 1 then
+            table.remove(message_times, i)
+        else
+            i = i + 1
+        end
+    end
+    
+    -- Drop if we exceed the rate limit
+    if #message_times > max_rate then
         return -1, timestamp, nil  -- Drop the record
     end
     
