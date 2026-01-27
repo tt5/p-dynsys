@@ -8,6 +8,7 @@ import asyncio
 import json
 import time
 from typing import Dict, Any
+from collections import deque
 import nats
 from core_simulation import HopfNormalForm, PredatorPreyModel
 from input_control import SimulationController, SimulationState
@@ -95,6 +96,30 @@ class SimulationEngine:
         )
         self.hopf_simulations[sim_id] = hopf
         
+        # Setup external input subscription if enabled
+        external_input_enabled = params.get("external_input", False)
+        input_buffer = deque(maxlen=1000)
+        
+        if external_input_enabled:
+            input_subject = params.get("input_subject", "sim.input.>")
+            
+            async def input_handler(msg):
+                try:
+                    input_data = json.loads(msg.data.decode())
+                    if "x" in input_data and "y" in input_data:
+                        input_buffer.append((input_data["x"], input_data["y"]))
+                        print(f"Received external input: x={input_data['x']}, y={input_data['y']}")
+                except Exception as e:
+                    print(f"Error processing input: {e}")
+            
+            # Subscribe to external input
+            await self.js.subscribe(
+                subject=input_subject,
+                stream="SIMULATION_INPUT",
+                cb=input_handler
+            )
+            print(f"Subscribed to external input: {input_subject}")
+        
         # Initial conditions
         x = params.get("x0", 0.1)
         y = params.get("y0", 0.1)
@@ -114,6 +139,18 @@ class SimulationEngine:
                     break
                 
                 try:
+                    # manipulate x and y using external input if available
+                    if external_input_enabled and input_buffer:
+                        # Get the next external input value
+                        external_x, external_y = input_buffer.popleft()
+                        
+                        # Apply external input (you can customize how to combine)
+                        input_strength = params.get("input_strength", 0.1)
+                        x = x * (1 - input_strength) + external_x * input_strength
+                        y = y * (1 - input_strength) + external_y * input_strength
+                        
+                        print(f"Applied external input: new x={x:.4f}, y={y:.4f}")
+                    
                     # Perform simulation step
                     x, y = hopf.step(x, y)
                     dx_dt, dy_dt = hopf.get_derivatives(x, y)
