@@ -1,9 +1,16 @@
 local counter = 0
 local max_rate = 50
-local last_message_time = 0
+local start_time = 0
+local last_output_time = 0
 
 function rate_control(tag, timestamp, record)
     counter = counter + 1
+    
+    -- Initialize start time on first message
+    if start_time == 0 then
+        start_time = timestamp
+        last_output_time = timestamp
+    end
     
     -- Check for external control signals every 10 messages
     if counter % 10 == 1 then
@@ -18,33 +25,23 @@ function rate_control(tag, timestamp, record)
         end
     end
     
-    -- Calculate minimum time between messages (nanoseconds)
-    local min_interval = 1000000000 / max_rate  -- 1 second / max_rate
+    -- Calculate minimum interval between outputs
+    local min_interval = 1000000000 / max_rate  -- nanoseconds
     
-    -- Track message times for rate limiting (timestamp is in nanoseconds)
-    local current_time_ns = timestamp
+    -- Calculate when this message should be output
+    local scheduled_time = last_output_time + min_interval
     
-    -- Check if we should drop this message
-    local should_drop = false
-    
-    if last_message_time > 0 and (current_time_ns - last_message_time) < min_interval then
-        -- Too soon - drop every second message
-        if counter % 7 == 0 then
-            should_drop = true
-        end
+    if timestamp >= scheduled_time then
+        -- Message is late enough, let it through
+        kept_count = kept_count + 1
+        last_output_time = timestamp
+        return 1, timestamp, record
+    else
+        -- Message is too early, delay it by updating its timestamp
+        local delayed_timestamp = scheduled_time
+        last_output_time = delayed_timestamp
+        return 1, delayed_timestamp, record  -- Return with delayed timestamp
     end
-    
-    -- Update last_message_time only for kept messages
-    if not should_drop then
-        last_message_time = current_time_ns
-    end
-    
-    if should_drop then
-        return -1, timestamp, nil  -- Drop the record
-    end
-    
-    -- Return code 1 means keep the record
-    return 1, timestamp, record
 end
 
 return {
