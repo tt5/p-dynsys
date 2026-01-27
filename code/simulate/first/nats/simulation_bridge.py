@@ -57,14 +57,34 @@ class SimulationBridge:
             except Exception as e:
                 print(f"Error processing output: {e}")
         
-        # Subscribe to simulation output
-        await self.js.subscribe(
-            subject=self.output_subject,
-            stream="SIMULATION",
-            cb=output_handler,
-            deliver_policy="new_only"
-        )
-        print(f"Subscribed to output: {self.output_subject}")
+        # Subscribe to simulation output with simpler configuration
+        try:
+            # First try to get stream info to make sure it exists
+            stream_info = await self.js.stream_info("SIMULATION")
+            print(f"Found SIMULATION stream with {stream_info.state.messages} messages")
+            
+            # Use regular subscription instead of JetStream consumer
+            await self.nc.subscribe(
+                subject=self.output_subject,
+                cb=output_handler
+            )
+            print(f"Subscribed to output: {self.output_subject}")
+            
+        except Exception as e:
+            print(f"Failed to subscribe to output: {e}")
+            # Try fallback to JetStream with explicit config
+            try:
+                await self.js.subscribe(
+                    subject=self.output_subject,
+                    stream="SIMULATION",
+                    cb=output_handler,
+                    deliver_policy="new_only",
+                    manual_ack=False
+                )
+                print(f"Subscribed to output via JetStream: {self.output_subject}")
+            except Exception as e2:
+                print(f"Fallback also failed: {e2}")
+                raise
     
     async def send_feedback(self):
         """Send delayed feedback to input"""
