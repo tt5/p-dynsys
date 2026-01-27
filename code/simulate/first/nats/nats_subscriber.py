@@ -21,9 +21,8 @@ class NatsSimulationSubscriber:
         self.nc = None
         self.js = None
         
-        # Data storage for live plotting
-        self.hopf_data = deque(maxlen=500)  # Keep last 500 points
-        self.predator_prey_data = deque(maxlen=500)
+        # Generic data storage - key: simulation_id, value: deque of data points
+        self.simulation_data = {}  # sim_id -> deque of data points
         
         # Track subscription start time to filter old messages
         self.subscription_start_time = None
@@ -31,7 +30,7 @@ class NatsSimulationSubscriber:
         # Live plot setup
         self.fig = None
         self.ax = None
-        self.lines = {}
+        self.lines = {}  # sim_id -> line objects
         self.plot_initialized = False
         
     async def connect(self):
@@ -56,97 +55,58 @@ class NatsSimulationSubscriber:
             print(f"Failed to connect to NATS: {e}")
             raise
     
-    async def subscribe_predator_prey(self):
-        """Subscribe to predator-prey simulation data"""
-        print("Subscribing to predator-prey simulation...")
+    async def subscribe_all_simulations(self):
+        """Subscribe to all simulation data generically"""
+        print("Subscribing to all simulation data...")
         
         async def message_handler(msg):
             try:
                 data = json.loads(msg.data.decode())
+                print(f"Received message: {data.get('simulation_id', 'unknown')} step {data.get('step', 'unknown')}")
                 
                 # Only process messages newer than subscription start time
                 if self.subscription_start_time and data.get("timestamp", 0) < self.subscription_start_time:
                     return  # Skip old messages
                 
-                self.predator_prey_data.append(data)
+                sim_id = data.get("simulation_id", "unknown")
                 
-                # Print status updates
-                if data["step"] % 50 == 0:
-                    print(f"Predator-Prey Step {data['step']}: "
-                          f"prey={data['prey']:.2f}, predator={data['predator']:.2f}")
+                # Initialize data storage for this simulation if needed
+                if sim_id not in self.simulation_data:
+                    self.simulation_data[sim_id] = deque(maxlen=500)
+                    # Add line for this simulation if plot is initialized
+                    if self.plot_initialized:
+                        line, = self.ax.plot([], [], label=sim_id, linewidth=2)
+                        self.lines[sim_id] = line
+                        self.ax.legend(loc='upper right')
                 
-            except Exception as e:
-                print(f"Error processing message: {e}")
-        
-        # Subscribe to messages directly (only new messages)
-        try:
-            await self.js.subscribe(
-                subject="sim.predator_prey.>",
-                stream=self.stream_name,
-                cb=message_handler,
-                deliver_policy="new_only"  # Only get new messages
-            )
-            print("Successfully subscribed to Predator-Prey simulations (new messages only)")
-        except Exception as e:
-            print(f"Failed to subscribe to Predator-Prey simulations: {e}")
-            # Fallback to regular subscription
-            try:
-                await self.js.subscribe(
-                    subject="sim.predator_prey.>",
-                    stream=self.stream_name,
-                    cb=message_handler
-                )
-                print("Subscribed to Predator-Prey simulations (all messages)")
-            except Exception as e2:
-                print(f"Fallback subscription also failed: {e2}")
-                raise
-    
-    async def subscribe_hopf(self):
-        """Subscribe to Hopf bifurcation simulation data"""
-        print("Subscribing to Hopf bifurcation simulation...")
-        
-        async def message_handler(msg):
-            try:
-                data = json.loads(msg.data.decode())
-                print(f"Received message: step={data.get('step')}, sim_id={data.get('simulation_id')}")
-                
-                # Only process messages newer than subscription start time
-                if self.subscription_start_time and data.get("timestamp", 0) < self.subscription_start_time:
-                    print(f"Skipping old message from {data.get('timestamp')}")
-                    return  # Skip old messages
-                
-                self.hopf_data.append(data)
-                print(f"Added data point, total: {len(self.hopf_data)}")
-                
-                # Print status updates
-                if data["step"] % 200 == 0:
-                    print(f"Hopf Step {data['step']}: "
-                          f"r={data['r']:.3f}, theta={data['theta']:.3f}")
+                # Store the data point
+                self.simulation_data[sim_id].append(data)
+                print(f"Added data point for {sim_id}, total: {len(self.simulation_data[sim_id])}")
                 
             except Exception as e:
                 print(f"Error processing message: {e}")
                 import traceback
                 traceback.print_exc()
         
-        # Subscribe to messages directly (only new messages)
+        # Subscribe to all simulation subjects
         try:
             await self.js.subscribe(
-                subject="sim.hopf.>",
+                subject="sim.>",  # All simulation data
                 stream=self.stream_name,
                 cb=message_handler,
                 deliver_policy="new_only"  # Only get new messages
             )
-            print("Successfully subscribed to Hopf simulations (new messages only)")
+            print("Successfully subscribed to all simulations (new messages only)")
         except Exception as e:
-            print(f"Failed to subscribe to Hopf simulations: {e}")
+            print(f"Failed to subscribe to simulations: {e}")
             # Fallback to regular subscription
             try:
                 await self.js.subscribe(
-                    subject="sim.hopf.>",
+                    subject="sim.>",
                     stream=self.stream_name,
                     cb=message_handler
                 )
-                print("Subscribed to Hopf simulations (all messages)")
+                print("Subscribed to all simulations (all messages)")
             except Exception as e2:
                 print(f"Fallback subscription also failed: {e2}")
                 raise
@@ -160,11 +120,8 @@ class NatsSimulationSubscriber:
         self.ax.set_title('Live Simulation Data')
         self.ax.grid(True, alpha=0.3)
         
-        # Initialize empty lines for different data types
-        self.lines['hopf_r'], = self.ax.plot([], [], 'r-', label='Hopf Radius', linewidth=2)
-        self.lines['hopf_theta'], = self.ax.plot([], [], 'b-', label='Hopf Angle', linewidth=2)
-        self.lines['prey'], = self.ax.plot([], [], 'g-', label='Prey', linewidth=2)
-        self.lines['predator'], = self.ax.plot([], [], 'orange', label='Predator', linewidth=2)
+        # Initialize empty lines dictionary
+        self.lines = {}
         
         self.ax.legend(loc='upper right')
         self.plot_initialized = True
@@ -184,26 +141,40 @@ class NatsSimulationSubscriber:
         for line in self.lines.values():
             line.set_data([], [])
         
-        # Update Hopf data
-        if self.hopf_data:
-            hopf_times = [d["timestamp"] for d in self.hopf_data]
-            hopf_r = [d["r"] for d in self.hopf_data]
-            hopf_theta = [d["theta"] for d in self.hopf_data]
-            
-            self.lines['hopf_r'].set_data(hopf_times, hopf_r)
-            self.lines['hopf_theta'].set_data(hopf_times, hopf_theta)
-        
-        # Update Predator-Prey data
-        if self.predator_prey_data:
-            pp_times = [d["timestamp"] for d in self.predator_prey_data]
-            prey = [d["prey"] for d in self.predator_prey_data]
-            predator = [d["predator"] for d in self.predator_prey_data]
-            
-            self.lines['prey'].set_data(pp_times, prey)
-            self.lines['predator'].set_data(pp_times, predator)
+        # Update each simulation's data
+        for sim_id, data_deque in self.simulation_data.items():
+            if data_deque and sim_id in self.lines:
+                # Get timestamps and find a primary value to plot
+                timestamps = [d["timestamp"] for d in data_deque]
+                
+                # Try to find the most meaningful value to plot
+                values = []
+                for d in data_deque:
+                    # Look for common numeric fields that might represent the main state
+                    if 'r' in d:  # Hopf radius
+                        values.append(d['r'])
+                    elif 'prey' in d:  # Predator-prey prey population
+                        values.append(d['prey'])
+                    elif 'predator' in d:  # Predator-prey predator population
+                        values.append(d['predator'])
+                    elif 'x' in d:  # Generic x coordinate
+                        values.append(d['x'])
+                    elif 'y' in d:  # Generic y coordinate
+                        values.append(d['y'])
+                    else:
+                        # Find any numeric field
+                        for key, value in d.items():
+                            if isinstance(value, (int, float)) and key not in ['timestamp', 'step', 'simulation_id']:
+                                values.append(value)
+                                break
+                        else:
+                            values.append(0)  # Default if no numeric field found
+                
+                if values:
+                    self.lines[sim_id].set_data(timestamps, values)
         
         # Only adjust plot limits if we have data
-        if self.hopf_data or self.predator_prey_data:
+        if self.simulation_data:
             self.ax.relim()
             self.ax.autoscale_view()
         
@@ -340,9 +311,8 @@ async def main():
     try:
         await subscriber.connect()
         
-        # Subscribe to both simulations
-        await subscriber.subscribe_predator_prey()
-        await subscriber.subscribe_hopf()
+        # Subscribe to all simulations generically
+        await subscriber.subscribe_all_simulations()
         
         # Run live plotting
         await subscriber.run_live_plotting()
