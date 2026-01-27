@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from collections import deque
 import numpy as np
+import os
+import time
 
 class LivePlot:
     def __init__(self, max_points=1000):
@@ -24,6 +26,18 @@ class LivePlot:
         self.ax.set_ylabel('Value')
         self.ax.grid(True)
         self.line_count = 0
+        
+    def write_to_fifo(self, record):
+        """Write JSON record to fifo"""
+        try:
+            fifo_path = "/home/n/data/p/dynsys/code/simulate/first/fifo"
+            if os.path.exists(fifo_path):
+                time.sleep(10)  # 1 second delay before writing
+                json_str = json.dumps(record)
+                #os.system(f'echo \'{json_str}\' > {fifo_path}')
+                os.system(f'''bash /home/n/data/p/dynsys/code/simulate/first/myscript.sh''')
+        except Exception as e:
+            pass  # Silently ignore fifo write errors
         
     def update(self, frame):
         # Read a line from stdin
@@ -41,6 +55,9 @@ class LivePlot:
             for record in records:
                 if not isinstance(record, dict):
                     continue
+                
+                # Write to fifo
+                self.write_to_fifo(record)
                     
                 # Get or create data buffers for each key
                 for key, value in record.items():
