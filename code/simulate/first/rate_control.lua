@@ -29,7 +29,7 @@ function rate_control(tag, timestamp, record)
     
     if last_message_time > 0 and (current_time_ns - last_message_time) < min_interval then
         -- Too soon - drop every second message
-        if counter % 6 == 0 then
+        if counter % 7 == 0 then
             should_drop = true
         end
     end
