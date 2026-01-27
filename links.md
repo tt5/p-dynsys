@@ -15,8 +15,6 @@ https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv_complexity
 
 # Other
 
-https://github.com/blues0910/IB2d
-
 https://en.wikipedia.org/wiki/Watts%E2%80%93Strogatz_model  
 Dan Lucas, Keele University, Stabilisation of exact coherent structures by time-delay feedback
 
@@ -30,6 +28,7 @@ https://www.youtube.com/watch?v=0GzG2NTCYmI
 https://www.youtube.com/watch?v=u2quTAv-B6Y  
 https://www.youtube.com/watch?v=aEXZSK0kUio  
 http://www.sliderules.mysterysystem.com/?n=Cloud+Puffs&c=.AABC4DQEgD5.BCA_9GFAfAP.CAAAAAAAAAA.D-__-8B9_A_.ECBKHI.F__.G_wAA_5kA__8AAP8FAP9mAP__AGb_MwD_zAD__wCZ____AAAA  
+https://www.youtube.com/watch?v=10gFQXNqus8
 
 # Predator-Prey, consumer-resource
 

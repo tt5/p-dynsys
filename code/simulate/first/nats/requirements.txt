@@ -1,0 +1,4 @@
+nats-py==2.7.0
+asyncio-mqtt==0.16.1
+matplotlib==3.8.2
+numpy==1.26.4
