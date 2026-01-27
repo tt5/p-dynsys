@@ -53,7 +53,7 @@ function multiplyby2(tag, timestamp, record)
             dt = 0.01      -- time step
         }
         new_record.value1, new_record.value2 = hopf_normal_form(record.value1, record.value2, params)
-        new_record.value1 = new_record.value1 + new_record.value2
+        --new_record.value1 = new_record.value1 + new_record.value2
         --new_record.value1 = new_record.value1 + new_record.value2
         
         -- Restore the original source

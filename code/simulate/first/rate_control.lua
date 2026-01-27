@@ -26,21 +26,23 @@ function rate_control(tag, timestamp, record)
     end
     
     -- Calculate minimum interval between outputs
-    local min_interval = 1000000000 / max_rate  -- nanoseconds
+    local min_interval = 1 / max_rate  -- nanoseconds (1 second / rate)
     
-    -- Calculate when this message should be output
-    local scheduled_time = last_output_time + min_interval
+    -- Check if enough time has passed since last output
+    local time_since_last = timestamp - last_output_time
     
-    if timestamp >= scheduled_time then
-        -- Message is late enough, let it through
-        kept_count = kept_count + 1
+    if time_since_last >= min_interval then
+        -- Let this message through
         last_output_time = timestamp
         return 1, timestamp, record
     else
-        -- Message is too early, delay it by updating its timestamp
-        local delayed_timestamp = scheduled_time
-        last_output_time = delayed_timestamp
-        return 1, delayed_timestamp, record  -- Return with delayed timestamp
+        -- Too soon, but let 1 out of 5 through to keep feedback alive
+        if counter % 2 == 0 then
+            last_output_time = timestamp
+            return 1, timestamp, record
+        else
+            return -1, timestamp, nil
+        end
     end
 end
 
