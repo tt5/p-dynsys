@@ -56,7 +56,7 @@ class LivePlot:
         """Write JSON record to fifo - runs asynchronously"""
         if not self.loop.is_running():
             return
-        asyncio.run_coroutine_threadsafe(self.async_write_to_fifo(record), self.loop)
+        #asyncio.run_coroutine_threadsafe(self.async_write_to_fifo(record), self.loop)
         
     def update(self, frame):
         # Read a line from stdin

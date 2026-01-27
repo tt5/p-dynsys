@@ -2,10 +2,25 @@ local values = {}
 local window_size = 10  -- Average over last 10 values
 local counter = 0
 local message_times = {}  -- Store timestamps of recent messages
-local max_rate = 5  -- Maximum messages per second
+local max_rate = 1  -- Maximum messages per second
+local last_control_check = 0
 
 function average_values(tag, timestamp, record)
     counter = counter + 1
+    
+    -- Check for external control signals every 10 messages
+    if counter % 10 == 1 then
+        local file = io.open("rate_control", "r")
+        if file then
+            local content = file:read("*all")
+            file:close()
+            local new_rate = tonumber(content)
+            if new_rate and new_rate >= 0 then
+                max_rate = new_rate
+                --print("Rate limit changed to:", max_rate)
+            end
+        end
+    end
     
     -- Initialize storage for this source if needed
     local source = record.source or "default"
