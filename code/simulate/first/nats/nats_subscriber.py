@@ -66,6 +66,10 @@ class NatsSimulationSubscriber:
                 data = json.loads(msg.data.decode())
                 print(f"Received message: {data.get('simulation_id', 'unknown')} step {data.get('step', 'unknown')}")
                 
+                # Debug: print full message structure if step is missing
+                if 'step' not in data:
+                    print(f"DEBUG: Full message data: {data}")
+                
                 # Only process messages newer than subscription start time
                 if self.subscription_start_time and data.get("timestamp", 0) < self.subscription_start_time:
                     return  # Skip old messages
@@ -88,15 +92,33 @@ class NatsSimulationSubscriber:
                 import traceback
                 traceback.print_exc()
         
-        # Subscribe to all simulation subjects
+        # Subscribe to simulation data only (not control commands)
         try:
+            # First try to get stream info to make sure SIMULATION stream exists
+            try:
+                stream_info = await self.js.stream_info(self.stream_name)
+                print(f"Found stream {self.stream_name} with {stream_info.state.messages} messages")
+            except Exception as e:
+                print(f"Stream {self.stream_name} not found: {e}")
+                return
+            
+            # Subscribe to Hopf simulation data
             await self.js.subscribe(
-                subject="sim.>",  # All simulation data
+                subject="sim.hopf.>",  # Hopf simulation data
                 stream=self.stream_name,
                 cb=message_handler,
                 deliver_policy="new_only"  # Only get new messages
             )
-            print("Successfully subscribed to all simulations (new messages only)")
+            print("Successfully subscribed to Hopf simulation data (new messages only)")
+            
+            # Subscribe to predator-prey simulation data
+            await self.js.subscribe(
+                subject="sim.predator_prey.>",  # Predator-prey simulation data
+                stream=self.stream_name,
+                cb=message_handler,
+                deliver_policy="new_only"  # Only get new messages
+            )
+            print("Successfully subscribed to predator-prey simulation data (new messages only)")
         except Exception as e:
             print(f"Failed to subscribe to simulations: {e}")
             # Fallback to regular subscription

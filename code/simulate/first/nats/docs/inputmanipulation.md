@@ -13,3 +13,15 @@ python modular_client.py --send-input sim.input.test_sim --data '{"x": 0.5, "y":
 ```
 
 The stream will be created automatically on the first simulation that enables external input, and subsequent simulations can reuse the same stream.
+
+---
+
+python modular_client.py start-hopf hopf_1 --params '{
+  "external_input": true,
+  "input_subject": "sim.input.test_sim", 
+  "input_strength": 0.2,
+  "mu": 0.1,
+  "alpha": -1.0,
+  "x0": 0.1,
+  "y0": 0.1
+}'

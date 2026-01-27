@@ -65,6 +65,11 @@ class SimulationEngine:
         dt = params.get("dt", 0.01)
         
         print(f"Starting {sim_type} simulation {sim_id} for {duration}s...")
+        print(f"Parameters: {params}")
+        external_input_enabled = params.get("external_input", False)
+        print(f"External input enabled: {external_input_enabled}")
+        if external_input_enabled:
+            print(f"Input subject: {params.get('input_subject', 'sim.input.>')}")
         
         # Initialize simulation based on type
         if sim_type == "hopf":
@@ -77,9 +82,13 @@ class SimulationEngine:
     
     async def _run_hopf_simulation(self, sim_id: str, params: Dict[str, Any], duration: float, dt: float):
         """Run Hopf bifurcation simulation"""
+        print(f"DEBUG: Starting _run_hopf_simulation for {sim_id}")
+        
         # Validate parameters for stability
         mu = params.get("mu", 0.1)
         alpha = params.get("alpha", -1.0)
+        
+        print(f"DEBUG: mu={mu}, alpha={alpha}")
         
         if mu > 0.3:
             print(f"Warning: mu={mu} is high, may cause instability")
@@ -87,6 +96,7 @@ class SimulationEngine:
             print(f"Warning: alpha={alpha} is positive, may cause unbounded growth")
         
         # Initialize Hopf simulation
+        print(f"DEBUG: Creating HopfNormalForm")
         hopf = HopfNormalForm(
             mu=mu,
             omega=params.get("omega", 1.0),
@@ -95,6 +105,7 @@ class SimulationEngine:
             dt=dt
         )
         self.hopf_simulations[sim_id] = hopf
+        print(f"DEBUG: HopfNormalForm created")
         
         # Setup external input subscription if enabled
         external_input_enabled = params.get("external_input", False)
@@ -113,7 +124,10 @@ class SimulationEngine:
                 ))
                 print(f"Created input stream: SIMULATION_INPUT")
             except Exception as e:
-                print(f"Input stream might already exist: {e}")
+                if "already exist" in str(e) or "overlap" in str(e):
+                    print(f"Input stream already exists: SIMULATION_INPUT")
+                else:
+                    print(f"Error creating input stream: {e}")
             
             async def input_handler(msg):
                 try:
@@ -125,19 +139,28 @@ class SimulationEngine:
                     print(f"Error processing input: {e}")
             
             # Subscribe to external input
-            await self.js.subscribe(
-                subject=input_subject,
-                stream="SIMULATION_INPUT",
-                cb=input_handler
-            )
-            print(f"Subscribed to external input: {input_subject}")
+            print(f"DEBUG: Attempting to subscribe to {input_subject}")
+            try:
+                await self.js.subscribe(
+                    subject=input_subject,
+                    stream="SIMULATION_INPUT",
+                    cb=input_handler
+                )
+                print(f"DEBUG: Successfully subscribed to external input: {input_subject}")
+            except Exception as e:
+                print(f"DEBUG: Failed to subscribe to external input: {e}")
+                import traceback
+                traceback.print_exc()
         
         # Initial conditions
+        print(f"DEBUG: Setting initial conditions")
         x = params.get("x0", 0.1)
         y = params.get("y0", 0.1)
+        print(f"DEBUG: Initial x={x}, y={y}")
         
         start_time = time.time()
         step = 0
+        print(f"DEBUG: Starting simulation loop")
         
         try:
             while time.time() - start_time < duration:
@@ -148,9 +171,11 @@ class SimulationEngine:
                 
                 # Check if simulation is stopped
                 if self.controller.simulations.get(sim_id) != SimulationState.RUNNING:
+                    print(f"DEBUG: Simulation {sim_id} not running, breaking")
                     break
                 
                 try:
+                    print(f"DEBUG: Step {step} - Current x={x:.4f}, y={y:.4f}")
                     # manipulate x and y using external input if available
                     if external_input_enabled and input_buffer:
                         # Get the next external input value
