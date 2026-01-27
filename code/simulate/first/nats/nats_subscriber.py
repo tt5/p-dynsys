@@ -257,7 +257,7 @@ class NatsSimulationSubscriber:
         plt.savefig('/home/n/data/p/dynsys/code/simulate/first/nats/hopf_plot.png', dpi=150)
         plt.close()  # Close plot to continue live updates
     
-    async def run_live_plotting(self, update_interval=0.5):
+    async def run_live_plotting(self, update_interval=0.2):
         """Run live plotting while receiving data"""
         print("Starting live plotting...")
         
