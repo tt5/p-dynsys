@@ -73,10 +73,13 @@ class NatsSimulationSubscriber:
                 # Initialize data storage for this simulation if needed
                 if sim_id not in self.simulation_data:
                     self.simulation_data[sim_id] = deque(maxlen=500)
-                    # Add line for this simulation if plot is initialized
+                    # Add lines for x and y if plot is initialized
                     if self.plot_initialized:
-                        line, = self.ax.plot([], [], label=sim_id, linewidth=2)
-                        self.lines[sim_id] = line
+                        self.lines[sim_id] = {}
+                        line_x, = self.ax.plot([], [], label=f"{sim_id}_x", linewidth=2)
+                        line_y, = self.ax.plot([], [], label=f"{sim_id}_y", linewidth=2, linestyle='--')
+                        self.lines[sim_id]['x'] = line_x
+                        self.lines[sim_id]['y'] = line_y
                         self.ax.legend(loc='upper right')
                 
                 # Store the data point
@@ -121,7 +124,7 @@ class NatsSimulationSubscriber:
         self.ax.grid(True, alpha=0.3)
         
         # Initialize empty lines dictionary
-        self.lines = {}
+        self.lines = {}  # sim_id -> {'x': line, 'y': line}
         
         self.ax.legend(loc='upper right')
         self.plot_initialized = True
@@ -138,40 +141,22 @@ class NatsSimulationSubscriber:
             return
         
         # Clear all lines first
-        for line in self.lines.values():
-            line.set_data([], [])
+        for sim_lines in self.lines.values():
+            for line in sim_lines.values():
+                line.set_data([], [])
         
         # Update each simulation's data
         for sim_id, data_deque in self.simulation_data.items():
             if data_deque and sim_id in self.lines:
-                # Get timestamps and find a primary value to plot
                 timestamps = [d["timestamp"] for d in data_deque]
                 
-                # Try to find the most meaningful value to plot
-                values = []
-                for d in data_deque:
-                    # Look for common numeric fields that might represent the main state
-                    if 'r' in d:  # Hopf radius
-                        values.append(d['r'])
-                    elif 'prey' in d:  # Predator-prey prey population
-                        values.append(d['prey'])
-                    elif 'predator' in d:  # Predator-prey predator population
-                        values.append(d['predator'])
-                    elif 'x' in d:  # Generic x coordinate
-                        values.append(d['x'])
-                    elif 'y' in d:  # Generic y coordinate
-                        values.append(d['y'])
-                    else:
-                        # Find any numeric field
-                        for key, value in d.items():
-                            if isinstance(value, (int, float)) and key not in ['timestamp', 'step', 'simulation_id']:
-                                values.append(value)
-                                break
-                        else:
-                            values.append(0)  # Default if no numeric field found
+                # Extract x and y values
+                x_values = [d.get("x", 0) for d in data_deque]
+                y_values = [d.get("y", 0) for d in data_deque]
                 
-                if values:
-                    self.lines[sim_id].set_data(timestamps, values)
+                # Update x and y lines
+                self.lines[sim_id]['x'].set_data(timestamps, x_values)
+                self.lines[sim_id]['y'].set_data(timestamps, y_values)
         
         # Only adjust plot limits if we have data
         if self.simulation_data:
