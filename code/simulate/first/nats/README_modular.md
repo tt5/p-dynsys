@@ -1,6 +1,6 @@
 # Modular Simulation System
 
-This directory contains a redesigned NATS simulation system with a modular architecture similar to fluent-bit.
+This directory contains a NATS simulation system with a modular architecture similar to fluent-bit (parent directory).
 
 ## Architecture
 
@@ -134,21 +134,3 @@ The system responds to control commands on the `sim.control.*` subjects:
 Simulation data is published to:
 - `sim.hopf.{simulation_id}.{step}` - Hopf bifurcation data
 - `sim.predator_prey.{simulation_id}.{step}` - Predator-prey data
-
-## Comparison with Original
-
-| Original | Modular |
-|----------|---------|
-| Single monolithic publisher | Separate modules |
-| Fixed simulation parameters | Dynamic parameter updates |
-| No lifecycle management | Full start/stop/pause/resume |
-| Hardcoded simulation logic | Pluggable simulation types |
-| Simple publish/subscribe | Control + data streams |
-
-## Benefits
-
-1. **Modularity**: Each module has a single responsibility
-2. **Flexibility**: Easy to add new simulation types
-3. **Control**: Full lifecycle management
-4. **Scalability**: Multiple simulations can run simultaneously
-5. **Maintainability**: Clear separation of concerns
