@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
 Modular client for controlling simulations
-Demonstrates how to use the new modular architecture
+CLI interface for the modular architecture
 """
 
 import asyncio
 import json
+import argparse
 from input_control import send_control_command
 
 
@@ -88,66 +89,41 @@ class SimulationClient:
         return response
 
 
-async def demo_modular_system():
-    """Demonstrate the modular simulation system"""
-    client = SimulationClient()
+async def main():
+    """CLI interface for simulation control"""
+    parser = argparse.ArgumentParser(description="Control modular simulations")
+    parser.add_argument("--server", default="nats://localhost:4222", help="NATS server URL")
+    parser.add_argument("action", choices=["start-hopf", "start-pp", "stop", "pause", "resume", "update", "status"], help="Action to perform")
+    parser.add_argument("sim_id", help="Simulation ID")
+    parser.add_argument("--params", help="Parameters as JSON string")
     
-    print("=== Modular Simulation System Demo ===\n")
+    args = parser.parse_args()
     
-    # Start a Hopf simulation
-    print("1. Starting Hopf simulation...")
-    await client.start_hopf_simulation(
-        "hopf_1",
-        mu=0.5,
-        omega=2.0,
-        duration=30
-    )
+    client = SimulationClient(args.server)
     
-    await asyncio.sleep(2)
+    # Parse parameters if provided
+    params = {}
+    if args.params:
+        params = json.loads(args.params)
     
-    # Start a predator-prey simulation
-    print("\n2. Starting predator-prey simulation...")
-    await client.start_predator_prey_simulation(
-        "pp_1",
-        alpha=1.5,
-        beta=0.5,
-        duration=30
-    )
-    
-    await asyncio.sleep(5)
-    
-    # Check status
-    print("\n3. Checking simulation status...")
-    await client.get_status("hopf_1")
-    await client.get_status("pp_1")
-    
-    await asyncio.sleep(5)
-    
-    # Update parameters
-    print("\n4. Updating Hopf simulation parameters...")
-    await client.update_simulation("hopf_1", mu=0.8, omega=3.0)
-    
-    await asyncio.sleep(5)
-    
-    # Pause simulation
-    print("\n5. Pausing predator-prey simulation...")
-    await client.pause_simulation("pp_1")
-    
-    await asyncio.sleep(2)
-    
-    # Resume simulation
-    print("\n6. Resuming predator-prey simulation...")
-    await client.resume_simulation("pp_1")
-    
-    await asyncio.sleep(10)
-    
-    # Stop simulations
-    print("\n7. Stopping simulations...")
-    await client.stop_simulation("hopf_1")
-    await client.stop_simulation("pp_1")
-    
-    print("\n=== Demo completed ===")
+    # Execute action
+    if args.action == "start-hopf":
+        await client.start_hopf_simulation(args.sim_id, **params)
+    elif args.action == "start-pp":
+        await client.start_predator_prey_simulation(args.sim_id, **params)
+    elif args.action == "stop":
+        await client.stop_simulation(args.sim_id)
+    elif args.action == "pause":
+        await client.pause_simulation(args.sim_id)
+    elif args.action == "resume":
+        await client.resume_simulation(args.sim_id)
+    elif args.action == "update":
+        await client.update_simulation(args.sim_id, **params)
+    elif args.action == "status":
+        await client.get_status(args.sim_id)
 
 
 if __name__ == "__main__":
-    asyncio.run(demo_modular_system())
+    asyncio.run(main())
+
+
