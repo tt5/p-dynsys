@@ -44,7 +44,7 @@ class LivePlot:
         try:
             fifo_path = "/home/n/data/p/dynsys/code/simulate/first/fifo"
             if os.path.exists(fifo_path):
-                await asyncio.sleep(0.5)  # 0.5 second delay
+                await asyncio.sleep(1)  # 0.5 second delay
                 # Use subprocess instead of os.system for better control
                 import subprocess
                 json_str = json.dumps(record)  # Convert dict to JSON string
@@ -56,7 +56,7 @@ class LivePlot:
         """Write JSON record to fifo - runs asynchronously"""
         if not self.loop.is_running():
             return
-        #asyncio.run_coroutine_threadsafe(self.async_write_to_fifo(record), self.loop)
+        asyncio.run_coroutine_threadsafe(self.async_write_to_fifo(record), self.loop)
         
     def update(self, frame):
         # Read a line from stdin

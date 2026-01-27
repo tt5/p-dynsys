@@ -1,5 +1,6 @@
 local counter = 0
 local max_rate = 50
+local message_times = {}
 
 function rate_control(tag, timestamp, record)
     counter = counter + 1
@@ -17,8 +18,22 @@ function rate_control(tag, timestamp, record)
         end
     end
     
-    -- Drop if we exceed the rate limit
-    if counter % (max_rate + 1) == 0 then
+    -- Track message times for rate limiting
+    local current_time = os.time()
+    table.insert(message_times, current_time)
+    
+    -- Remove messages older than 1 second
+    local i = 1
+    while i <= #message_times do
+        if current_time - message_times[i] >= 1 then
+            table.remove(message_times, i)
+        else
+            i = i + 1
+        end
+    end
+    
+    -- Drop if we exceed the rate limit per second
+    if #message_times > max_rate then
         return -1, timestamp, nil  -- Drop the record
     end
     
