@@ -240,6 +240,9 @@ class SimulationController:
     
     async def _get_status(self, sim_id: str) -> Dict[str, Any]:
         """Get simulation status"""
+        print(f"Status request for simulation: {sim_id}")
+        print(f"Current simulations: {list(self.simulations.keys())}")
+        
         if sim_id not in self.simulations:
             return {
                 "simulation_id": sim_id,
@@ -248,10 +251,13 @@ class SimulationController:
                 "message": "Simulation not found"
             }
         
+        status = self.simulations[sim_id].value
+        print(f"Simulation {sim_id} status: {status}")
+        
         return {
             "simulation_id": sim_id,
             "action": "status",
-            "status": self.simulations[sim_id].value,
+            "status": status,
             "parameters": self.simulation_params.get(sim_id, {})
         }
     

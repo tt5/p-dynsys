@@ -76,11 +76,20 @@ class SimulationEngine:
     
     async def _run_hopf_simulation(self, sim_id: str, params: Dict[str, Any], duration: float, dt: float):
         """Run Hopf bifurcation simulation"""
+        # Validate parameters for stability
+        mu = params.get("mu", 0.1)
+        alpha = params.get("alpha", -1.0)
+        
+        if mu > 0.3:
+            print(f"Warning: mu={mu} is high, may cause instability")
+        if alpha > 0:
+            print(f"Warning: alpha={alpha} is positive, may cause unbounded growth")
+        
         # Initialize Hopf simulation
         hopf = HopfNormalForm(
-            mu=params.get("mu", 0.1),
+            mu=mu,
             omega=params.get("omega", 1.0),
-            alpha=params.get("alpha", -1.0),
+            alpha=alpha,
             beta=params.get("beta", 1.0),
             dt=dt
         )
@@ -93,49 +102,70 @@ class SimulationEngine:
         start_time = time.time()
         step = 0
         
-        while time.time() - start_time < duration:
-            # Check if simulation is paused
-            if self.controller.simulations.get(sim_id) == SimulationState.PAUSED:
-                await asyncio.sleep(0.1)
-                continue
-            
-            # Check if simulation is stopped
-            if self.controller.simulations.get(sim_id) != SimulationState.RUNNING:
-                break
-            
-            # Perform simulation step
-            x, y = hopf.step(x, y)
-            dx_dt, dy_dt = hopf.get_derivatives(x, y)
-            r, theta = hopf.get_polar_coords(x, y)
-            
-            # Prepare data message
-            data = {
-                "timestamp": time.time(),
-                "simulation_id": sim_id,
-                "step": step,
-                "x": x,
-                "y": y,
-                "r": r,
-                "theta": theta,
-                "dx_dt": dx_dt,
-                "dy_dt": dy_dt,
-                "parameters": hopf.get_params()
-            }
-            
-            # Publish to NATS
-            await self.js.publish(
-                f"sim.hopf.{sim_id}.{step}",
-                json.dumps(data).encode()
-            )
-            
-            # Status updates
-            if step % 100 == 0:
-                print(f"Hopf {sim_id} Step {step}: r={r:.3f}, theta={theta:.3f}")
-            
-            step += 1
-            await asyncio.sleep(dt)
-        
-        print(f"Hopf simulation {sim_id} completed")
+        try:
+            while time.time() - start_time < duration:
+                # Check if simulation is paused
+                if self.controller.simulations.get(sim_id) == SimulationState.PAUSED:
+                    await asyncio.sleep(0.1)
+                    continue
+                
+                # Check if simulation is stopped
+                if self.controller.simulations.get(sim_id) != SimulationState.RUNNING:
+                    break
+                
+                try:
+                    # Perform simulation step
+                    x, y = hopf.step(x, y)
+                    dx_dt, dy_dt = hopf.get_derivatives(x, y)
+                    r, theta = hopf.get_polar_coords(x, y)
+                    
+                    # Prepare data message
+                    data = {
+                        "timestamp": time.time(),
+                        "simulation_id": sim_id,
+                        "step": step,
+                        "x": x,
+                        "y": y,
+                        "r": r,
+                        "theta": theta,
+                        "dx_dt": dx_dt,
+                        "dy_dt": dy_dt,
+                        "parameters": hopf.get_params()
+                    }
+                    
+                    # Publish to NATS
+                    try:
+                        await self.js.publish(
+                            f"sim.hopf.{sim_id}.{step}",
+                            json.dumps(data).encode()
+                        )
+                    except Exception as e:
+                        print(f"Error publishing to NATS at step {step}: {e}")
+                        # Continue simulation even if publishing fails
+                    
+                    # Status updates
+                    if step % 100 == 0:
+                        print(f"Hopf {sim_id} Step {step}: r={r:.3f}, theta={theta:.3f}")
+                    
+                    step += 1
+                    await asyncio.sleep(dt)
+                    
+                except Exception as e:
+                    print(f"Error in simulation step {step}: {e}")
+                    break
+                    
+        except Exception as e:
+            print(f"Simulation loop error: {e}")
+        finally:
+            # Clean up simulation state
+            self.simulation_states.pop(sim_id, None)
+            self.hopf_simulations.pop(sim_id, None)
+            # Use controller's stop method for proper cleanup
+            try:
+                await self.controller._stop_simulation(sim_id)
+            except Exception as e:
+                print(f"Error cleaning up simulation state: {e}")
+            print(f"Hopf simulation {sim_id} completed after {step} steps")
     
     async def _run_predator_prey_simulation(self, sim_id: str, params: Dict[str, Any], duration: float, dt: float):
         """Run predator-prey simulation"""
@@ -183,10 +213,14 @@ class SimulationEngine:
             }
             
             # Publish to NATS
-            await self.js.publish(
-                f"sim.predator_prey.{sim_id}.{step}",
-                json.dumps(data).encode()
-            )
+            try:
+                await self.js.publish(
+                    f"sim.predator_prey.{sim_id}.{step}",
+                    json.dumps(data).encode()
+                )
+            except Exception as e:
+                print(f"Error publishing to NATS at step {step}: {e}")
+                # Continue simulation even if publishing fails
             
             # Status updates
             if step % 10 == 0:

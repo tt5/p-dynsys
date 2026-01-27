@@ -27,6 +27,10 @@ class HopfNormalForm:
         Perform one step of Hopf normal form integration
         Returns updated (x, y) values
         """
+        # Check for numerical stability
+        if abs(x) > 1e6 or abs(y) > 1e6:
+            raise ValueError(f"Numerical overflow: x={x}, y={y}")
+        
         # Hopf normal form equations
         dx_dt = self.mu * x - self.omega * y + self.alpha * x * (x**2 + y**2)
         dy_dt = self.mu * y + self.omega * x + self.beta * y * (x**2 + y**2)
