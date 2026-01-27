@@ -16,12 +16,6 @@ The stream will be created automatically on the first simulation that enables ex
 
 ---
 
-python modular_client.py start-hopf hopf_1 --params '{
-  "external_input": true,
-  "input_subject": "sim.input.test_sim", 
-  "input_strength": 0.2,
-  "mu": 0.1,
-  "alpha": -1.0,
-  "x0": 0.1,
-  "y0": 0.1
-}'
+python send_input.py hopf_2
+
+

@@ -144,12 +144,19 @@ class SimulationEngine:
             if external_input_enabled:
                 print(f"DEBUG: Attempting to subscribe to {input_subject}")
                 try:
-                    await self.js.subscribe(
-                        subject=input_subject,
-                        stream="SIMULATION_INPUT",
-                        cb=input_handler
+                    # Add timeout to prevent hanging
+                    await asyncio.wait_for(
+                        self.js.subscribe(
+                            subject=input_subject,
+                            stream="SIMULATION_INPUT",
+                            cb=input_handler
+                        ),
+                        timeout=5.0  # 5 second timeout
                     )
                     print(f"DEBUG: Successfully subscribed to external input: {input_subject}")
+                except asyncio.TimeoutError:
+                    print(f"DEBUG: Subscription timeout, continuing without external input")
+                    external_input_enabled = False
                 except Exception as e:
                     print(f"DEBUG: Failed to subscribe to external input: {e}")
                     print(f"DEBUG: Continuing without external input")
