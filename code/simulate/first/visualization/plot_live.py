@@ -23,6 +23,7 @@ class LivePlot:
         self.ax.set_xlabel('Time Step')
         self.ax.set_ylabel('Value')
         self.ax.grid(True)
+        self.line_count = 0
         
     def update(self, frame):
         # Read a line from stdin
@@ -32,46 +33,51 @@ class LivePlot:
             
         try:
             # Parse the JSON data
-            data = json.loads(line.strip())
-            if not data:
+            records = json.loads(line.strip())
+            if not records or not isinstance(records, list):
                 return list(self.lines.values())
                 
-            # Get or create data buffers for each key
-            for key, value in data.items():
-                if not isinstance(value, (int, float)):
+            # Process each record in the array
+            for record in records:
+                if not isinstance(record, dict):
                     continue
                     
-                if key not in self.buffers:
-                    self.buffers[key] = deque(maxlen=self.max_points)
-                    # Create a new line for this key
-                    self.lines[key], = self.ax.plot([], [], label=key, alpha=0.8)
-                    self.ax.legend()
+                # Get or create data buffers for each key
+                for key, value in record.items():
+                    if not isinstance(value, (int, float)):
+                        continue
+                        
+                    if key not in self.buffers:
+                        self.buffers[key] = deque(maxlen=self.max_points)
+                        # Create a new line for this key
+                        self.lines[key], = self.ax.plot([], [], label=key, alpha=0.8)
+                        self.ax.legend()
+                    
+                    self.buffers[key].append(value)
                 
-                self.buffers[key].append(value)
-            
-            # Update x-axis (time steps)
-            self.timesteps.append(len(self.timesteps) + 1)
-            
-            # Update each line
-            for key, line in self.lines.items():
-                if key in self.buffers and self.buffers[key]:
-                    line.set_data(self.timesteps[-len(self.buffers[key]):], self.buffers[key])
-            
-            # Adjust the plot limits
-            if self.timesteps:
-                self.ax.set_xlim(0, max(self.timesteps) + 1)
+                # Update x-axis (time steps)
+                self.timesteps.append(len(self.timesteps) + 1)
                 
-                # Find the overall y-range
-                all_values = []
-                for buf in self.buffers.values():
-                    if buf:
-                        all_values.extend(buf)
+                # Update each line
+                for key, line in self.lines.items():
+                    if key in self.buffers and self.buffers[key]:
+                        line.set_data(range(len(self.buffers[key])), self.buffers[key])
                 
-                if all_values:
-                    min_val = min(all_values)
-                    max_val = max(all_values)
-                    padding = (max_val - min_val) * 0.1  # 10% padding
-                    self.ax.set_ylim(min_val - padding, max_val + padding)
+                # Adjust the plot limits
+                if self.timesteps:
+                    self.ax.set_xlim(0, max(len(buf) for buf in self.buffers.values()) + 1)
+                    
+                    # Find the overall y-range
+                    all_values = []
+                    for buf in self.buffers.values():
+                        if buf:
+                            all_values.extend(buf)
+                    
+                    if all_values:
+                        min_val = min(all_values)
+                        max_val = max(all_values)
+                        padding = (max_val - min_val) * 0.1  # 10% padding
+                        self.ax.set_ylim(min_val - padding, max_val + padding)
             
         except json.JSONDecodeError:
             print(f"Warning: Could not parse line: {line}", file=sys.stderr)
