@@ -1,8 +1,6 @@
 local counter = 0
 local max_rate = 50
-local message_times = {}
-local last_second = 0
-local messages_this_second = 0
+local last_message_time = 0
 
 function rate_control(tag, timestamp, record)
     counter = counter + 1
@@ -20,25 +18,21 @@ function rate_control(tag, timestamp, record)
         end
     end
     
+    -- Calculate minimum time between messages (nanoseconds)
+    local min_interval = 1000000000 / max_rate  -- 1 second / max_rate
+    
     -- Track message times for rate limiting (timestamp is in nanoseconds)
     local current_time_ns = timestamp
-    local current_second = math.floor(current_time_ns / 1000000000)
     
-    -- Reset counter every second
-    if current_second ~= last_second then
-        last_second = current_second
-        messages_this_second = 0
-    end
-    
-    messages_this_second = messages_this_second + 1
-    
-    -- Drop if we exceed the rate limit for this second
-    if messages_this_second > max_rate then
-        -- Drop every second message when over limit
-        if messages_this_second % 2 == 0 then
+    -- Drop if too soon since last message
+    if last_message_time > 0 and (current_time_ns - last_message_time) < min_interval then
+        -- Drop every second message when too close
+        if counter % 2 == 0 then
             return -1, timestamp, nil  -- Drop the record
         end
     end
+    
+    last_message_time = current_time_ns
     
     -- Return code 1 means keep the record
     return 1, timestamp, record
