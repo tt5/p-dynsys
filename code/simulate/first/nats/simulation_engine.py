@@ -103,6 +103,18 @@ class SimulationEngine:
         if external_input_enabled:
             input_subject = params.get("input_subject", "sim.input.>")
             
+            # Create input stream if it doesn't exist
+            try:
+                from nats.js.api import StreamConfig
+                await self.js.add_stream(StreamConfig(
+                    name="SIMULATION_INPUT",
+                    subjects=["sim.input.>"],
+                    description="External input for simulation manipulation"
+                ))
+                print(f"Created input stream: SIMULATION_INPUT")
+            except Exception as e:
+                print(f"Input stream might already exist: {e}")
+            
             async def input_handler(msg):
                 try:
                     input_data = json.loads(msg.data.decode())
