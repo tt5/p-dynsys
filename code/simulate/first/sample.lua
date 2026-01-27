@@ -2,8 +2,9 @@ local last_sample_time = 0
 function sample(tag, timestamp, record)
     local current_time = os.time()
 
-    if current_time - last_sample_time >= 1 then
+    if current_time - last_sample_time >= 0.5 then
         last_sample_time = current_time
+        
         -- Return code 1 means keep the record
         return 1, timestamp, record
     end

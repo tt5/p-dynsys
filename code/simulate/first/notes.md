@@ -31,3 +31,6 @@ Limit UDP traffic to 1000 packets/second
 sudo tc qdisc add dev lo root handle 1: htb
 sudo tc class add dev lo parent 1: classid 1:1 htb rate 1mbit
 sudo tc filter add dev lo protocol ip parent 1:0 prio 1 u32 match ip dport 8000 0xffff flowid 1:1
+
+echo "true" > drop_enabled
+echo "false" > drop_enabled
