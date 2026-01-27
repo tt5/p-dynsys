@@ -23,6 +23,7 @@ class NatsSimulationSubscriber:
         
         # Generic data storage - key: simulation_id, value: deque of data points
         self.simulation_data = {}  # sim_id -> deque of data points
+        self.simulation_start_times = {}  # sim_id -> start timestamp
         
         # Track subscription start time to filter old messages
         self.subscription_start_time = None
@@ -72,7 +73,8 @@ class NatsSimulationSubscriber:
                 
                 # Initialize data storage for this simulation if needed
                 if sim_id not in self.simulation_data:
-                    self.simulation_data[sim_id] = deque(maxlen=500)
+                    self.simulation_data[sim_id] = deque(maxlen=2000)  # Increased from 500 to 2000
+                    self.simulation_start_times[sim_id] = data.get("timestamp", time.time())
                     # Add lines for x and y if plot is initialized
                     if self.plot_initialized:
                         self.lines[sim_id] = {}
@@ -148,15 +150,24 @@ class NatsSimulationSubscriber:
         # Update each simulation's data
         for sim_id, data_deque in self.simulation_data.items():
             if data_deque and sim_id in self.lines:
-                timestamps = [d["timestamp"] for d in data_deque]
+                # Use relative time from simulation start
+                start_time = self.simulation_start_times[sim_id]
+                relative_times = [d["timestamp"] - start_time for d in data_deque]
                 
                 # Extract x and y values
                 x_values = [d.get("x", 0) for d in data_deque]
                 y_values = [d.get("y", 0) for d in data_deque]
                 
+                # Only show last N data points (sliding window)
+                window_size = min(500, len(data_deque))  # Show last 500 points or all if less
+                if len(data_deque) > window_size:
+                    relative_times = relative_times[-window_size:]
+                    x_values = x_values[-window_size:]
+                    y_values = y_values[-window_size:]
+                
                 # Update x and y lines
-                self.lines[sim_id]['x'].set_data(timestamps, x_values)
-                self.lines[sim_id]['y'].set_data(timestamps, y_values)
+                self.lines[sim_id]['x'].set_data(relative_times, x_values)
+                self.lines[sim_id]['y'].set_data(relative_times, y_values)
         
         # Only adjust plot limits if we have data
         if self.simulation_data:
