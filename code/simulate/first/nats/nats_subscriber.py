@@ -21,12 +21,18 @@ class NatsSimulationSubscriber:
         self.nc = None
         self.js = None
         
-        # Data storage for plotting
-        self.predator_prey_data = deque(maxlen=1000)
-        self.hopf_data = deque(maxlen=2000)
+        # Data storage for live plotting
+        self.hopf_data = deque(maxlen=500)  # Keep last 500 points
+        self.predator_prey_data = deque(maxlen=500)
         
         # Track subscription start time to filter old messages
         self.subscription_start_time = None
+        
+        # Live plot setup
+        self.fig = None
+        self.ax = None
+        self.lines = {}
+        self.plot_initialized = False
         
     async def connect(self):
         """Connect to NATS server and setup JetStream"""
@@ -145,8 +151,67 @@ class NatsSimulationSubscriber:
                 print(f"Fallback subscription also failed: {e2}")
                 raise
     
+    def setup_live_plot(self):
+        """Setup live plot for real-time visualization"""
+        plt.ion()  # Turn on interactive mode
+        self.fig, self.ax = plt.subplots(figsize=(10, 6))
+        self.ax.set_xlabel('Time (s)')
+        self.ax.set_ylabel('Values')
+        self.ax.set_title('Live Simulation Data')
+        self.ax.grid(True, alpha=0.3)
+        
+        # Initialize empty lines for different data types
+        self.lines['hopf_r'], = self.ax.plot([], [], 'r-', label='Hopf Radius', linewidth=2)
+        self.lines['hopf_theta'], = self.ax.plot([], [], 'b-', label='Hopf Angle', linewidth=2)
+        self.lines['prey'], = self.ax.plot([], [], 'g-', label='Prey', linewidth=2)
+        self.lines['predator'], = self.ax.plot([], [], 'orange', label='Predator', linewidth=2)
+        
+        self.ax.legend(loc='upper right')
+        self.plot_initialized = True
+        print("Live plot initialized")
+        
+        # Make plot window not steal focus
+        if plt.get_backend() == 'TkAgg':
+            self.fig.canvas.manager.window.attributes('-topmost', False)
+        plt.show(block=False)
+    
+    def update_live_plot(self):
+        """Update the live plot with current data"""
+        if not self.plot_initialized:
+            return
+        
+        current_time = time.time()
+        
+        # Update Hopf data
+        if self.hopf_data:
+            hopf_times = [current_time - (len(self.hopf_data) - i) * 0.01 for i in range(len(self.hopf_data))]
+            hopf_r = [d["r"] for d in self.hopf_data]
+            hopf_theta = [d["theta"] for d in self.hopf_data]
+            
+            self.lines['hopf_r'].set_data(hopf_times, hopf_r)
+            self.lines['hopf_theta'].set_data(hopf_times, hopf_theta)
+        
+        # Update Predator-Prey data
+        if self.predator_prey_data:
+            pp_times = [current_time - (len(self.predator_prey_data) - i) * 0.1 for i in range(len(self.predator_prey_data))]
+            prey = [d["prey"] for d in self.predator_prey_data]
+            predator = [d["predator"] for d in self.predator_prey_data]
+            
+            self.lines['prey'].set_data(pp_times, prey)
+            self.lines['predator'].set_data(pp_times, predator)
+        
+        # Adjust plot limits
+        self.ax.relim()
+        self.ax.autoscale_view()
+        
+        # Redraw without stealing focus
+        self.fig.canvas.draw_idle()
+        try:
+            self.fig.canvas.flush_events()
+        except:
+            pass  # Ignore if window is closed
+    
     def plot_predator_prey(self):
-        """Plot predator-prey phase space and time series"""
         if not self.predator_prey_data:
             print("No predator-prey data to plot")
             return
@@ -233,34 +298,32 @@ class NatsSimulationSubscriber:
         plt.savefig('/home/n/data/p/dynsys/code/simulate/first/nats/hopf_plot.png', dpi=150)
         plt.close()  # Close plot to continue live updates
     
-    async def run_live_plotting(self, update_interval=2.0):
+    async def run_live_plotting(self, update_interval=0.5):
         """Run live plotting while receiving data"""
         print("Starting live plotting...")
+        
+        # Setup the live plot
+        self.setup_live_plot()
         
         async def plot_loop():
             while True:
                 await asyncio.sleep(update_interval)
-                print(f"Plot update: {len(self.hopf_data)} Hopf points, {len(self.predator_prey_data)} PP points")
                 
-                # Update plots if we have data
-                if len(self.predator_prey_data) > 10:
-                    print("Updating predator-prey plot...")
-                    self.plot_predator_prey()
-                
-                if len(self.hopf_data) > 100:
-                    print("Updating Hopf plot...")
-                    self.plot_hopf()
+                # Update live plot with current data
+                self.update_live_plot()
         
         # Start plotting loop
         plot_task = asyncio.create_task(plot_loop())
         
         try:
             # Keep running
-            await asyncio.sleep(300)  # Run for 5 minutes
+            while True:
+                await asyncio.sleep(1)
         except asyncio.CancelledError:
             pass
         finally:
             plot_task.cancel()
+            plt.close('all')
     
     async def close(self):
         """Close NATS connection"""

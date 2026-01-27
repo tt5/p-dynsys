@@ -23,7 +23,7 @@ python modular_client.py start-hopf hopf_1 --params '{"duration": 30, "mu": 0.5,
 
 install dependencies
 
-nats server
+./nats-server-v2.10.23-linux-amd64/nats-server -js
 
 Terminal 1: python simulation_engine.py (runs the simulations)
 
