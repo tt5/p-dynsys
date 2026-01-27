@@ -128,6 +128,8 @@ class SimulationEngine:
                     print(f"Input stream already exists: SIMULATION_INPUT")
                 else:
                     print(f"Error creating input stream: {e}")
+                    print(f"DEBUG: Continuing without external input subscription")
+                    external_input_enabled = False  # Disable external input if stream creation fails
             
             async def input_handler(msg):
                 try:
@@ -138,19 +140,20 @@ class SimulationEngine:
                 except Exception as e:
                     print(f"Error processing input: {e}")
             
-            # Subscribe to external input
-            print(f"DEBUG: Attempting to subscribe to {input_subject}")
-            try:
-                await self.js.subscribe(
-                    subject=input_subject,
-                    stream="SIMULATION_INPUT",
-                    cb=input_handler
-                )
-                print(f"DEBUG: Successfully subscribed to external input: {input_subject}")
-            except Exception as e:
-                print(f"DEBUG: Failed to subscribe to external input: {e}")
-                import traceback
-                traceback.print_exc()
+            # Subscribe to external input only if stream creation succeeded
+            if external_input_enabled:
+                print(f"DEBUG: Attempting to subscribe to {input_subject}")
+                try:
+                    await self.js.subscribe(
+                        subject=input_subject,
+                        stream="SIMULATION_INPUT",
+                        cb=input_handler
+                    )
+                    print(f"DEBUG: Successfully subscribed to external input: {input_subject}")
+                except Exception as e:
+                    print(f"DEBUG: Failed to subscribe to external input: {e}")
+                    print(f"DEBUG: Continuing without external input")
+                    external_input_enabled = False
         
         # Initial conditions
         print(f"DEBUG: Setting initial conditions")
