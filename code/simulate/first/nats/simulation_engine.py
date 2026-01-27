@@ -144,8 +144,10 @@ class SimulationEngine:
                         # Continue simulation even if publishing fails
                     
                     # Status updates
-                    if step % 100 == 0:
+                    if step % 10 == 0:  # Changed from 100 to 10 for more frequent updates
                         print(f"Hopf {sim_id} Step {step}: r={r:.3f}, theta={theta:.3f}")
+                        # Output JSON for subscriber
+                        print(json.dumps(data))
                     
                     step += 1
                     await asyncio.sleep(dt)
@@ -223,8 +225,10 @@ class SimulationEngine:
                 # Continue simulation even if publishing fails
             
             # Status updates
-            if step % 10 == 0:
+            if step % 5 == 0:  # Changed from 10 to 5 for even more frequent updates
                 print(f"Predator-Prey {sim_id} Step {step}: prey={prey:.2f}, predator={predator:.2f}")
+                # Output JSON for subscriber
+                print(json.dumps(data))
             
             step += 1
             await asyncio.sleep(dt)

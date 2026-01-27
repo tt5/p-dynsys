@@ -24,6 +24,7 @@ class NatsSimulationSubscriber:
         # Generic data storage - key: simulation_id, value: deque of data points
         self.simulation_data = {}  # sim_id -> deque of data points
         self.simulation_start_times = {}  # sim_id -> start timestamp
+        self.last_processed_counts = {}  # sim_id -> last processed count
         
         # Track subscription start time to filter old messages
         self.subscription_start_time = None
@@ -73,16 +74,10 @@ class NatsSimulationSubscriber:
                 
                 # Initialize data storage for this simulation if needed
                 if sim_id not in self.simulation_data:
-                    self.simulation_data[sim_id] = deque(maxlen=2000)  # Increased from 500 to 2000
+                    self.simulation_data[sim_id] = deque(maxlen=2000)
                     self.simulation_start_times[sim_id] = data.get("timestamp", time.time())
-                    # Add lines for x and y if plot is initialized
-                    if self.plot_initialized:
-                        self.lines[sim_id] = {}
-                        line_x, = self.ax.plot([], [], label=f"{sim_id}_x", linewidth=2)
-                        line_y, = self.ax.plot([], [], label=f"{sim_id}_y", linewidth=2, linestyle='--')
-                        self.lines[sim_id]['x'] = line_x
-                        self.lines[sim_id]['y'] = line_y
-                        self.ax.legend(loc='upper right')
+                    self.last_processed_counts[sim_id] = 0  # Reset processed count for new simulation
+                    print(f"Initialized new simulation: {sim_id}")
                 
                 # Store the data point
                 self.simulation_data[sim_id].append(data)
@@ -116,74 +111,177 @@ class NatsSimulationSubscriber:
                 print(f"Fallback subscription also failed: {e2}")
                 raise
     
+    def reset_plot(self):
+        """Reset the plot completely - useful after crashes"""
+        if self.plot_initialized and self.fig:
+            # Clear all lines
+            for line in self.lines.values():
+                line.remove()
+            self.lines.clear()
+            self.buffers.clear()
+            
+            # Clear data
+            self.simulation_data.clear()
+            self.simulation_start_times.clear()
+            self.last_processed_counts.clear()
+            
+            # Reset plot limits
+            self.ax.clear()
+            self.ax.set_title('Live Simulation Data')
+            self.ax.set_xlabel('Time Step')
+            self.ax.set_ylabel('Value')
+            self.ax.grid(True, alpha=0.3)
+            
+            print("Plot reset complete")
+    
     def setup_live_plot(self):
         """Setup live plot for real-time visualization"""
         plt.ion()  # Turn on interactive mode
-        self.fig, self.ax = plt.subplots(figsize=(10, 6))
-        self.ax.set_xlabel('Time (s)')
-        self.ax.set_ylabel('Values')
+        self.fig, self.ax = plt.subplots(figsize=(12, 6))
         self.ax.set_title('Live Simulation Data')
+        self.ax.set_xlabel('Time Step')
+        self.ax.set_ylabel('Value')
         self.ax.grid(True, alpha=0.3)
         
-        # Initialize empty lines dictionary
-        self.lines = {}  # sim_id -> {'x': line, 'y': line}
+        # Initialize empty lines dictionary - like plot_live.py
+        self.lines = {}  # key -> line
+        self.buffers = {}  # key -> deque
+        self.timesteps = deque(maxlen=1000)
         
-        self.ax.legend(loc='upper right')
         self.plot_initialized = True
         print("Live plot initialized")
         
         # Make plot window not steal focus
         if plt.get_backend() == 'TkAgg':
             self.fig.canvas.manager.window.attributes('-topmost', False)
+            
+            # Add keyboard shortcut for reset
+            def on_key(event):
+                if event.key == 'r':  # Press 'r' to reset plot
+                    print("Resetting plot...")
+                    self.reset_plot()
+                elif event.key == 'c':  # Press 'c' to clear data only
+                    print("Clearing data...")
+                    self.simulation_data.clear()
+                    self.simulation_start_times.clear()
+                    self.last_processed_counts.clear()
+                    
+            self.fig.canvas.mpl_connect('key_press_event', on_key)
+        
         plt.show(block=False)
     
     def update_live_plot(self):
-        """Update the live plot with current data"""
+        """Update the live plot with current data - simple and reliable"""
         if not self.plot_initialized:
             return
         
-        # Clear all lines first
-        for sim_lines in self.lines.values():
-            for line in sim_lines.values():
-                line.set_data([], [])
+        # Clean up stale simulations (no data for more than 5 seconds)
+        current_time = time.time()
+        stale_sims = []
+        for sim_id, start_time in self.simulation_start_times.items():
+            if current_time - start_time > 5 and sim_id in self.simulation_data:
+                if len(self.simulation_data[sim_id]) == 0 or \
+                   current_time - self.simulation_data[sim_id][-1].get('timestamp', 0) > 5:
+                    stale_sims.append(sim_id)
         
-        # Update each simulation's data
+        # Clean up stale simulation data and plot lines
+        for sim_id in stale_sims:
+            print(f"Cleaning up stale simulation: {sim_id}")
+            # Remove data
+            self.simulation_data.pop(sim_id, None)
+            self.simulation_start_times.pop(sim_id, None)
+            # Remove plot lines and buffers
+            keys_to_remove = [k for k in self.buffers.keys() if k.startswith(f"{sim_id}_")]
+            for key in keys_to_remove:
+                if key in self.lines:
+                    self.lines[key].remove()
+                    del self.lines[key]
+                if key in self.buffers:
+                    del self.buffers[key]
+            # Update legend
+            if self.lines:
+                self.ax.legend(loc='upper right')
+        
+        # Process each simulation
         for sim_id, data_deque in self.simulation_data.items():
-            if data_deque and sim_id in self.lines:
-                # Use relative time from simulation start
-                start_time = self.simulation_start_times[sim_id]
-                relative_times = [d["timestamp"] - start_time for d in data_deque]
+            if not data_deque:
+                continue
+            
+            # Get all data points for this simulation
+            all_data = list(data_deque)
+            
+            # Check for overflow values and skip them
+            has_overflow = False
+            for data in all_data:
+                for key in ['x', 'y']:
+                    if key in data and isinstance(data[key], (int, float)):
+                        if abs(data[key]) > 1e6:
+                            has_overflow = True
+                            print(f"Skipping overflow data for {sim_id}: {key}={data[key]}")
+                            break
+                if has_overflow:
+                    break
+            
+            if has_overflow:
+                continue  # Skip this simulation entirely if it has overflow data
+            
+            # Process each key in the data
+            for key in ['x', 'y']:
+                buffer_key = f"{sim_id}_{key}"
                 
-                # Extract x and y values
-                x_values = [d.get("x", 0) for d in data_deque]
-                y_values = [d.get("y", 0) for d in data_deque]
+                # Create buffer if it doesn't exist
+                if buffer_key not in self.buffers:
+                    self.buffers[buffer_key] = deque(maxlen=1000)
+                    # Create line for this key
+                    self.lines[buffer_key], = self.ax.plot([], [], label=buffer_key, alpha=0.8, linewidth=2)
+                    if 'y' in key:
+                        self.lines[buffer_key].set_linestyle('--')
+                    self.ax.legend(loc='upper right')
                 
-                # Only show last N data points (sliding window)
-                window_size = min(500, len(data_deque))  # Show last 500 points or all if less
-                if len(data_deque) > window_size:
-                    relative_times = relative_times[-window_size:]
-                    x_values = x_values[-window_size:]
-                    y_values = y_values[-window_size:]
+                # Extract all values for this key (skip overflow values)
+                values = []
+                for data in all_data:
+                    if key in data and isinstance(data[key], (int, float)):
+                        if abs(data[key]) < 1e6:  # Only add non-overflow values
+                            values.append(data[key])
                 
-                # Update x and y lines
-                self.lines[sim_id]['x'].set_data(relative_times, x_values)
-                self.lines[sim_id]['y'].set_data(relative_times, y_values)
+                # Update buffer with all values
+                self.buffers[buffer_key].clear()
+                self.buffers[buffer_key].extend(values)
         
-        # Always adjust plot limits and force immediate update
-        if self.simulation_data:
-            self.ax.relim()
-            self.ax.autoscale_view()
-            # Force a small manual range if autoscale doesn't work
-            if not hasattr(self, '_initial_range_set'):
-                self.ax.set_xlim(-1, 5)  # Initial 5-second window
-                self.ax.set_ylim(-2, 2)   # Initial value range
-                self._initial_range_set = True
+        # Update each line
+        for key, line in self.lines.items():
+            if key in self.buffers and self.buffers[key]:
+                line.set_data(range(len(self.buffers[key])), list(self.buffers[key]))
+        
+        # Adjust plot limits
+        if any(self.buffers.values()):
+            max_len = max(len(buf) for buf in self.buffers.values())
+            self.ax.set_xlim(0, max_len + 1)
+            
+            # Find the overall y-range (skip empty buffers)
+            all_values = []
+            for buf in self.buffers.values():
+                if buf:  # Only add values from non-empty buffers
+                    all_values.extend(buf)
+            
+            if all_values:
+                min_val = min(all_values)
+                max_val = max(all_values)
+                padding = (max_val - min_val) * 0.1 if max_val != min_val else 1.0
+                self.ax.set_ylim(min_val - padding, max_val + padding)
+            else:
+                # No valid data, set default limits
+                self.ax.set_ylim(-1, 1)
+        else:
+            # No data at all, set default limits
+            self.ax.set_xlim(0, 100)
+            self.ax.set_ylim(-1, 1)
         
         # Redraw without stealing focus
         self.fig.canvas.draw_idle()
         try:
             self.fig.canvas.flush_events()
-            # Remove plt.pause to prevent focus stealing
         except:
             pass  # Ignore if window is closed
     
