@@ -13,6 +13,8 @@ ports 8000, 8001
 
 `gnuplot -p plot.gp`
 
+`fluent-bit -c n3.conf | python3 visualization/plot_live.py`
+
 # Lua Script Behavior
 
 Script Loading:
