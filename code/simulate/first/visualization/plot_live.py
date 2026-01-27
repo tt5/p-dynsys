@@ -44,11 +44,11 @@ class LivePlot:
         try:
             fifo_path = "/home/n/data/p/dynsys/code/simulate/first/fifo"
             if os.path.exists(fifo_path):
-                await asyncio.sleep(4)  # 0.5 second delay
+                await asyncio.sleep(0.5)  # 0.5 second delay
                 # Use subprocess instead of os.system for better control
                 import subprocess
                 json_str = json.dumps(record)  # Convert dict to JSON string
-                #subprocess.run(['echo', json_str], stdout=open(fifo_path, 'w'), check=True)
+                subprocess.run(['echo', json_str], stdout=open(fifo_path, 'w'), check=True)
         except Exception as e:
             pass  # Silently ignore fifo write errors
         
