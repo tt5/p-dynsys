@@ -25,12 +25,27 @@ class NatsSimulationSubscriber:
         self.predator_prey_data = deque(maxlen=1000)
         self.hopf_data = deque(maxlen=2000)
         
+        # Track subscription start time to filter old messages
+        self.subscription_start_time = None
+        
     async def connect(self):
         """Connect to NATS server and setup JetStream"""
         try:
             self.nc = await nats.connect(self.server)
             self.js = self.nc.jetstream()
             print(f"Connected to NATS at {self.server}")
+            
+            # Set subscription start time to filter old messages
+            self.subscription_start_time = time.time()
+            
+            # Clear old data to ensure only new messages
+            try:
+                stream_info = await self.js.stream_info(self.stream_name)
+                print(f"Stream {self.stream_name} has {stream_info.state.messages} messages")
+                # Don't delete stream, just note it exists
+            except Exception as e:
+                print(f"Stream info not available: {e}")
+                
         except Exception as e:
             print(f"Failed to connect to NATS: {e}")
             raise
@@ -42,6 +57,11 @@ class NatsSimulationSubscriber:
         async def message_handler(msg):
             try:
                 data = json.loads(msg.data.decode())
+                
+                # Only process messages newer than subscription start time
+                if self.subscription_start_time and data.get("timestamp", 0) < self.subscription_start_time:
+                    return  # Skip old messages
+                
                 self.predator_prey_data.append(data)
                 
                 # Print status updates
@@ -82,7 +102,15 @@ class NatsSimulationSubscriber:
         async def message_handler(msg):
             try:
                 data = json.loads(msg.data.decode())
+                print(f"Received message: step={data.get('step')}, sim_id={data.get('simulation_id')}")
+                
+                # Only process messages newer than subscription start time
+                if self.subscription_start_time and data.get("timestamp", 0) < self.subscription_start_time:
+                    print(f"Skipping old message from {data.get('timestamp')}")
+                    return  # Skip old messages
+                
                 self.hopf_data.append(data)
+                print(f"Added data point, total: {len(self.hopf_data)}")
                 
                 # Print status updates
                 if data["step"] % 200 == 0:
@@ -91,6 +119,8 @@ class NatsSimulationSubscriber:
                 
             except Exception as e:
                 print(f"Error processing message: {e}")
+                import traceback
+                traceback.print_exc()
         
         # Subscribe to messages directly (only new messages)
         try:
@@ -151,7 +181,7 @@ class NatsSimulationSubscriber:
         
         plt.tight_layout()
         plt.savefig('/home/n/data/p/dynsys/code/simulate/first/nats/predator_prey_plot.png', dpi=150)
-        plt.show()
+        plt.close()  # Close plot to continue live updates
     
     def plot_hopf(self):
         """Plot Hopf bifurcation data"""
@@ -201,7 +231,7 @@ class NatsSimulationSubscriber:
         
         plt.tight_layout()
         plt.savefig('/home/n/data/p/dynsys/code/simulate/first/nats/hopf_plot.png', dpi=150)
-        plt.show()
+        plt.close()  # Close plot to continue live updates
     
     async def run_live_plotting(self, update_interval=2.0):
         """Run live plotting while receiving data"""
@@ -210,12 +240,15 @@ class NatsSimulationSubscriber:
         async def plot_loop():
             while True:
                 await asyncio.sleep(update_interval)
+                print(f"Plot update: {len(self.hopf_data)} Hopf points, {len(self.predator_prey_data)} PP points")
                 
                 # Update plots if we have data
                 if len(self.predator_prey_data) > 10:
+                    print("Updating predator-prey plot...")
                     self.plot_predator_prey()
                 
                 if len(self.hopf_data) > 100:
+                    print("Updating Hopf plot...")
                     self.plot_hopf()
         
         # Start plotting loop
