@@ -28,6 +28,9 @@ class LivePlot:
         self.ax.set_ylabel('Value')
         self.ax.grid(True)
         self.line_count = 0
+        self.start_time = time.time()
+        self.save_interval = 120  # Save every 120 seconds
+        self.last_save_time = self.start_time
         
         # Start the async event loop in a thread
         self.loop = asyncio.new_event_loop()
@@ -52,6 +55,14 @@ class LivePlot:
         except Exception as e:
             pass  # Silently ignore fifo write errors
         
+    def save_plot(self, filename='live_plot.png'):
+        """Save the current plot to an image file"""
+        try:
+            self.fig.savefig(filename, dpi=150, bbox_inches='tight')
+            print(f"Plot saved to {filename}")
+        except Exception as e:
+            print(f"Error saving plot: {e}")
+    
     def write_to_fifo(self, record):
         """Write JSON record to fifo - runs asynchronously"""
         if not self.loop.is_running():
@@ -59,6 +70,13 @@ class LivePlot:
         asyncio.run_coroutine_threadsafe(self.async_write_to_fifo(record), self.loop)
         
     def update(self, frame):
+        # Check if it's time to save the plot
+        current_time = time.time()
+        if current_time - self.last_save_time >= self.save_interval:
+            timestamp = int(current_time)
+            self.save_plot(f'live_plot_{timestamp}.png')
+            self.last_save_time = current_time
+        
         # Read a line from stdin
         line = sys.stdin.readline()
         if not line:
