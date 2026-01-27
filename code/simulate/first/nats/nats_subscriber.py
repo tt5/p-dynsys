@@ -169,15 +169,21 @@ class NatsSimulationSubscriber:
                 self.lines[sim_id]['x'].set_data(relative_times, x_values)
                 self.lines[sim_id]['y'].set_data(relative_times, y_values)
         
-        # Only adjust plot limits if we have data
+        # Always adjust plot limits and force immediate update
         if self.simulation_data:
             self.ax.relim()
             self.ax.autoscale_view()
+            # Force a small manual range if autoscale doesn't work
+            if not hasattr(self, '_initial_range_set'):
+                self.ax.set_xlim(-1, 5)  # Initial 5-second window
+                self.ax.set_ylim(-2, 2)   # Initial value range
+                self._initial_range_set = True
         
         # Redraw without stealing focus
         self.fig.canvas.draw_idle()
         try:
             self.fig.canvas.flush_events()
+            # Remove plt.pause to prevent focus stealing
         except:
             pass  # Ignore if window is closed
     
