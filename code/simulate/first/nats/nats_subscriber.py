@@ -180,11 +180,13 @@ class NatsSimulationSubscriber:
         if not self.plot_initialized:
             return
         
-        current_time = time.time()
+        # Clear all lines first
+        for line in self.lines.values():
+            line.set_data([], [])
         
         # Update Hopf data
         if self.hopf_data:
-            hopf_times = [current_time - (len(self.hopf_data) - i) * 0.01 for i in range(len(self.hopf_data))]
+            hopf_times = [d["timestamp"] for d in self.hopf_data]
             hopf_r = [d["r"] for d in self.hopf_data]
             hopf_theta = [d["theta"] for d in self.hopf_data]
             
@@ -193,16 +195,17 @@ class NatsSimulationSubscriber:
         
         # Update Predator-Prey data
         if self.predator_prey_data:
-            pp_times = [current_time - (len(self.predator_prey_data) - i) * 0.1 for i in range(len(self.predator_prey_data))]
+            pp_times = [d["timestamp"] for d in self.predator_prey_data]
             prey = [d["prey"] for d in self.predator_prey_data]
             predator = [d["predator"] for d in self.predator_prey_data]
             
             self.lines['prey'].set_data(pp_times, prey)
             self.lines['predator'].set_data(pp_times, predator)
         
-        # Adjust plot limits
-        self.ax.relim()
-        self.ax.autoscale_view()
+        # Only adjust plot limits if we have data
+        if self.hopf_data or self.predator_prey_data:
+            self.ax.relim()
+            self.ax.autoscale_view()
         
         # Redraw without stealing focus
         self.fig.canvas.draw_idle()
