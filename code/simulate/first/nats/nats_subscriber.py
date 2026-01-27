@@ -27,9 +27,13 @@ class NatsSimulationSubscriber:
         
     async def connect(self):
         """Connect to NATS server and setup JetStream"""
-        self.nc = await nats.connect(self.server)
-        self.js = self.nc.jetstream()
-        print(f"Connected to NATS at {self.server}")
+        try:
+            self.nc = await nats.connect(self.server)
+            self.js = self.nc.jetstream()
+            print(f"Connected to NATS at {self.server}")
+        except Exception as e:
+            print(f"Failed to connect to NATS: {e}")
+            raise
     
     async def subscribe_predator_prey(self):
         """Subscribe to predator-prey simulation data"""
@@ -48,12 +52,28 @@ class NatsSimulationSubscriber:
             except Exception as e:
                 print(f"Error processing message: {e}")
         
-        # Subscribe to messages directly
-        await self.js.subscribe(
-            subject="sim.predator_prey.>",
-            stream=self.stream_name,
-            cb=message_handler
-        )
+        # Subscribe to messages directly (only new messages)
+        try:
+            await self.js.subscribe(
+                subject="sim.predator_prey.>",
+                stream=self.stream_name,
+                cb=message_handler,
+                deliver_policy="new_only"  # Only get new messages
+            )
+            print("Successfully subscribed to Predator-Prey simulations (new messages only)")
+        except Exception as e:
+            print(f"Failed to subscribe to Predator-Prey simulations: {e}")
+            # Fallback to regular subscription
+            try:
+                await self.js.subscribe(
+                    subject="sim.predator_prey.>",
+                    stream=self.stream_name,
+                    cb=message_handler
+                )
+                print("Subscribed to Predator-Prey simulations (all messages)")
+            except Exception as e2:
+                print(f"Fallback subscription also failed: {e2}")
+                raise
     
     async def subscribe_hopf(self):
         """Subscribe to Hopf bifurcation simulation data"""
@@ -72,12 +92,28 @@ class NatsSimulationSubscriber:
             except Exception as e:
                 print(f"Error processing message: {e}")
         
-        # Subscribe to messages directly
-        await self.js.subscribe(
-            subject="sim.hopf.>",
-            stream=self.stream_name,
-            cb=message_handler
-        )
+        # Subscribe to messages directly (only new messages)
+        try:
+            await self.js.subscribe(
+                subject="sim.hopf.>",
+                stream=self.stream_name,
+                cb=message_handler,
+                deliver_policy="new_only"  # Only get new messages
+            )
+            print("Successfully subscribed to Hopf simulations (new messages only)")
+        except Exception as e:
+            print(f"Failed to subscribe to Hopf simulations: {e}")
+            # Fallback to regular subscription
+            try:
+                await self.js.subscribe(
+                    subject="sim.hopf.>",
+                    stream=self.stream_name,
+                    cb=message_handler
+                )
+                print("Subscribed to Hopf simulations (all messages)")
+            except Exception as e2:
+                print(f"Fallback subscription also failed: {e2}")
+                raise
     
     def plot_predator_prey(self):
         """Plot predator-prey phase space and time series"""
