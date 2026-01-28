@@ -97,12 +97,14 @@ class SimulationEngine:
         
         # Initialize Hopf simulation
         print(f"DEBUG: Creating HopfNormalForm")
+        integration_method = params.get("integration_method", "rk4")
         hopf = HopfNormalForm(
             mu=mu,
             omega=params.get("omega", 1.0),
             alpha=alpha,
             beta=params.get("beta", 1.0),
-            dt=dt
+            dt=dt,
+            integration_method=integration_method
         )
         self.hopf_simulations[sim_id] = hopf
         print(f"DEBUG: HopfNormalForm created")
@@ -168,9 +170,15 @@ class SimulationEngine:
         y = params.get("y0", 0.1)
         print(f"DEBUG: Initial x={x}, y={y}")
         
+        # Performance optimization settings
+        publish_frequency = params.get("publish_frequency", 100)  # Publish every N steps
+        status_frequency = params.get("status_frequency", 1000)   # Status updates every N steps
+        enable_debug = params.get("debug", False)  # Disable debug prints by default
+        
         start_time = time.time()
         step = 0
-        print(f"DEBUG: Starting simulation loop")
+        last_publish_time = start_time
+        print(f"DEBUG: Starting simulation loop with {integration_method} integration")
         
         try:
             while time.time() - start_time < duration:
@@ -185,7 +193,8 @@ class SimulationEngine:
                     break
                 
                 try:
-                    print(f"DEBUG: Step {step} - Current x={x:.4f}, y={y:.4f}")
+                    if enable_debug and step % 1000 == 0:
+                        print(f"DEBUG: Step {step} - Current x={x:.4f}, y={y:.4f}")
                     # manipulate x and y using external input if available
                     if external_input_enabled and input_buffer:
                         # Get the next external input value
@@ -217,21 +226,28 @@ class SimulationEngine:
                         "parameters": hopf.get_params()
                     }
                     
-                    # Publish to NATS
-                    try:
-                        await self.js.publish(
-                            f"sim.hopf.{sim_id}.{step}",
-                            json.dumps(data).encode()
-                        )
-                    except Exception as e:
-                        print(f"Error publishing to NATS at step {step}: {e}")
-                        # Continue simulation even if publishing fails
+                    # Publish to NATS only at specified frequency
+                    should_publish = (step % publish_frequency == 0) or (step == 0)
+                    current_time = time.time()
                     
-                    # Status updates
-                    if step % 10 == 0:  # Changed from 100 to 10 for more frequent updates
-                        print(f"Hopf {sim_id} Step {step}: r={r:.3f}, theta={theta:.3f}")
-                        # Output JSON for subscriber
-                        print(json.dumps(data))
+                    if should_publish:
+                        try:
+                            await self.js.publish(
+                                f"sim.hopf.{sim_id}.{step}",
+                                json.dumps(data).encode()
+                            )
+                            last_publish_time = current_time
+                        except Exception as e:
+                            print(f"Error publishing to NATS at step {step}: {e}")
+                            # Continue simulation even if publishing fails
+                    
+                    # Status updates less frequently
+                    if step % status_frequency == 0:
+                        elapsed = current_time - start_time
+                        steps_per_sec = step / elapsed if elapsed > 0 else 0
+                        print(f"Hopf {sim_id} Step {step}: r={r:.3f}, theta={theta:.3f}, {steps_per_sec:.1f} steps/sec")
+                        if should_publish:
+                            print(json.dumps(data))
                     
                     step += 1
                     await asyncio.sleep(dt)
@@ -256,12 +272,14 @@ class SimulationEngine:
     async def _run_predator_prey_simulation(self, sim_id: str, params: Dict[str, Any], duration: float, dt: float):
         """Run predator-prey simulation"""
         # Initialize predator-prey simulation
+        integration_method = params.get("integration_method", "rk4")
         pp = PredatorPreyModel(
             alpha=params.get("alpha", 1.1),
             beta=params.get("beta", 0.4),
             delta=params.get("delta", 0.1),
             gamma=params.get("gamma", 0.4),
-            dt=dt
+            dt=dt,
+            integration_method=integration_method
         )
         self.predator_prey_simulations[sim_id] = pp
         
@@ -269,8 +287,13 @@ class SimulationEngine:
         prey = params.get("prey0", 10.0)
         predator = params.get("predator0", 5.0)
         
+        # Performance optimization settings
+        publish_frequency = params.get("publish_frequency", 50)   # Publish every N steps
+        status_frequency = params.get("status_frequency", 500)    # Status updates every N steps
+        
         start_time = time.time()
         step = 0
+        last_publish_time = start_time
         
         while time.time() - start_time < duration:
             # Check if simulation is paused
@@ -298,21 +321,28 @@ class SimulationEngine:
                 "parameters": pp.get_params()
             }
             
-            # Publish to NATS
-            try:
-                await self.js.publish(
-                    f"sim.predator_prey.{sim_id}.{step}",
-                    json.dumps(data).encode()
-                )
-            except Exception as e:
-                print(f"Error publishing to NATS at step {step}: {e}")
-                # Continue simulation even if publishing fails
+            # Publish to NATS only at specified frequency
+            should_publish = (step % publish_frequency == 0) or (step == 0)
+            current_time = time.time()
             
-            # Status updates
-            if step % 5 == 0:  # Changed from 10 to 5 for even more frequent updates
-                print(f"Predator-Prey {sim_id} Step {step}: prey={prey:.2f}, predator={predator:.2f}")
-                # Output JSON for subscriber
-                print(json.dumps(data))
+            if should_publish:
+                try:
+                    await self.js.publish(
+                        f"sim.predator_prey.{sim_id}.{step}",
+                        json.dumps(data).encode()
+                    )
+                    last_publish_time = current_time
+                except Exception as e:
+                    print(f"Error publishing to NATS at step {step}: {e}")
+                    # Continue simulation even if publishing fails
+            
+            # Status updates less frequently
+            if step % status_frequency == 0:
+                elapsed = current_time - start_time
+                steps_per_sec = step / elapsed if elapsed > 0 else 0
+                print(f"Predator-Prey {sim_id} Step {step}: prey={prey:.2f}, predator={predator:.2f}, {steps_per_sec:.1f} steps/sec")
+                if should_publish:
+                    print(json.dumps(data))
             
             step += 1
             await asyncio.sleep(dt)
