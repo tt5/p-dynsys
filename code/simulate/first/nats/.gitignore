@@ -46,4 +46,7 @@ ENV/
 .DS_Store
 Thumbs.db
 
+fifo
+predator_prey.dat
+nats
 nats-server
