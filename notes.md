@@ -1,5 +1,7 @@
 # Notes
 
+coupling
+
 diff eq: change of variable
 
 Delay Differential Equations: history function (initial function)
@@ -12,6 +14,9 @@ supercollider
 SOC (self-organized criticality)
 optimal sensitivity to a small external inputs
 https://www.youtube.com/watch?v=ydt99BXi3YU
+
+falling, trajectory
+https://www.youtube.com/watch?v=lcsHFopFX8g
 
 ## Jupyter Notebook
 

@@ -26,6 +26,7 @@ https://www.youtube.com/watch?v=hilnMeRzbxc
 # Hopf Bifurcation
 
 https://www.ucl.ac.uk/~ucesgvd/hopf.pdf
+https://www.youtube.com/watch?v=0wRw2axOigQ
 
 # Sandpiles
 
@@ -42,3 +43,8 @@ https://www.youtube.com/watch?v=GLH4egU_Upk
 https://www.youtube.com/watch?v=WoBsyLnnVZs
 https://www.youtube.com/watch?v=JalNygbOEIQ
 https://www.youtube.com/watch?v=lgaX1rrHF7c
+https://www.youtube.com/watch?v=RHnoH7xO19I
+
+# Chua circuit
+
+https://www.youtube.com/watch?v=9FsHJoOFQKo
