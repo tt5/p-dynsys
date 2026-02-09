@@ -9,14 +9,10 @@ Delay Differential Equations: history function (initial function)
 https://github.com/blues0910/IB2d
 
 DynamicalSystems.jl
-supercollider
 
 SOC (self-organized criticality)
 optimal sensitivity to a small external inputs
 https://www.youtube.com/watch?v=ydt99BXi3YU
-
-falling, trajectory
-https://www.youtube.com/watch?v=lcsHFopFX8g
 
 ## Jupyter Notebook
 
