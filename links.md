@@ -1,9 +1,5 @@
 # Links
 
-https://www.youtube.com/@gabororosz5703/videos  
-
-https://arxiv.org/pdf/2312.17588  
-
 Dan Lucas, Keele University, Stabilisation of exact coherent structures by time-delay feedback
 https://www.youtube.com/watch?v=NFAaaAizmH8
 

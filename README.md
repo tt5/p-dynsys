@@ -1,3 +1,3 @@
 # Experimental Math
 
-Dynamical systems.
+**Dynamical systems**: A system that evolves in time according to a well-defined, unchanging rule.
