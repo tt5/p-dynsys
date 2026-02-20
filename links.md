@@ -1,8 +1,5 @@
 # Links
 
-Dan Lucas, Keele University, Stabilisation of exact coherent structures by time-delay feedback
-https://www.youtube.com/watch?v=NFAaaAizmH8
-
 https://www.youtube.com/watch?v=_l9PDjqQSII  
 
 Lenia:
