@@ -8,7 +8,6 @@ https://www.youtube.com/watch?v=10gFQXNqus8
 # Hopf Bifurcation
 
 https://www.ucl.ac.uk/~ucesgvd/hopf.pdf
-https://www.youtube.com/watch?v=0wRw2axOigQ
 
 # Sandpiles
 
@@ -16,7 +15,6 @@ https://www.youtube.com/@harmonicsandpiledynamics6887
 https://huacayacauh.github.io/JS-Sandpile/JS-Sandpile.html
 https://pmc.ncbi.nlm.nih.gov/articles/PMC6386721/
 
-https://arxiv.org/pdf/2501.15845
 https://arxiv.org/pdf/2404.13137
 https://arxiv.org/pdf/2403.15859
 https://arxiv.org/pdf/2110.12760
