@@ -16,3 +16,9 @@ https://www.youtube.com/watch?v=ydt99BXi3YU
 
 <ESC-M> make markdown cell
 
+start julia
+```julia
+using IJulia
+notebook()
+```
+
