@@ -5,10 +5,6 @@ https://www.youtube.com/watch?v=_l9PDjqQSII
 Lenia:
 https://www.youtube.com/watch?v=10gFQXNqus8
 
-# Hopf Bifurcation
-
-https://www.ucl.ac.uk/~ucesgvd/hopf.pdf
-
 # Sandpiles
 
 https://www.youtube.com/@harmonicsandpiledynamics6887

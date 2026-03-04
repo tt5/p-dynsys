@@ -1,6 +1,7 @@
 # Notes
 
-Delay Differential Equations: history function (initial function)
+Delay Differential Equations: history function (initial function).
+Small delay does not change the character of the function.
 
 https://github.com/blues0910/IB2d
 
