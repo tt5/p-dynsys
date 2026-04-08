@@ -1,4 +1,4 @@
-# Complete CLI Commands Reference
+# CLI Commands Reference
 
 ## Basic Usage
 ```bash

@@ -95,5 +95,3 @@ V1: Van der Pol dynamics + coupling to Hopf
 **For robust chaos:** Van der Pol network or Chua's circuit
 **For biological realism:** FitzHugh-Nagumo or ecological networks
 **For simplicity:** Modified Van der Pol (single oscillator)
-
-Which direction interests you most?

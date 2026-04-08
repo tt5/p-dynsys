@@ -81,5 +81,3 @@ This network combines:
 - **Feedback**: Global control loop
 
 The interaction of these mechanisms can produce complex dynamics including synchronization, quasi-periodicity, and network chaos - much richer than a single Hopf oscillator.
-
-Would you like me to implement this network system?

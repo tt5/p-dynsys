@@ -46,5 +46,3 @@ Here's a comparison of the three systems for your needs:
 - Perfect for studying chaos onset
 
 **Hopf** is not suitable unless you want to heavily modify the equations.
-
-Would you like me to implement the Van der Pol system?

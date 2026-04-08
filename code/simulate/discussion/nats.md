@@ -127,5 +127,3 @@ await js.publish(f"sim.vdp.{sim_id}.{step}", json.dumps(data))
 - You require sub-microsecond latency
 - You're running 100+ concurrent simulations
 - You need guaranteed message ordering
-
-Your current NATS + VdP approach is actually a good architectural choice for exploratory chaos research.

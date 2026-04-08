@@ -1,4 +1,4 @@
-You're absolutely right! With `publish_frequency=200`, you lose the ability to do fine-grained input manipulation where each message corresponds to one simulation step.
+With `publish_frequency=200`, you lose the ability to do fine-grained input manipulation where each message corresponds to one simulation step.
 
 ## **The Problem**
 

@@ -1,5 +1,3 @@
-**Coupling** refers to how different oscillators or components of a system influence each other. Let me break it down precisely:
-
 ## **Physical Meaning of Coupling**
 
 ### **1. Direct Influence**
