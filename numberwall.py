@@ -323,9 +323,9 @@ seq = [calculate_nth(x) for x in range(0,300)]
 #print(seq)
 
 
-#out = numbwall([1,2,3,4,5],2)
-#print(out)
-#seq = [1,2,3,4,5]
 m = 2
-PrintNW(seq,m)
+seq = [1,2,3,4,5]
+out = numbwall([1,2,3,4,5],2)
+print(out)
+#PrintNW(seq,m)
 

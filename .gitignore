@@ -1,4 +1,6 @@
 .ipynb_checkpoints
 Untitled*
 test-output
-numberwallout.png
+*.png
+**/*.mp4
+**/*.wawav

@@ -15,6 +15,8 @@ https://www.youtube.com/watch?v=ydt99BXi3YU
 
 ## Jupyter Notebook
 
+jupyter-lab, copy cells between tabs
+
 <ESC-M> make markdown cell
 
 start julia

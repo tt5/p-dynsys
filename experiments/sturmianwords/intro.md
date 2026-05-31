@@ -29,5 +29,3 @@ Each Sturmian word is characterized by:
 - **Intercept ρ** (real number)
 
 The standard/characteristic word c_α corresponds to intercept ρ = 0 and can be constructed using continued fractions.
-
-Sturmian words appear in dynamical systems, symbolic dynamics, and have connections to number theory through their relationship with irrational rotations and continued fractions.
