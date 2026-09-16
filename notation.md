@@ -8,11 +8,24 @@ Logic of ZFC: first-order logic with equality. Logical symbols: $\forall$, $\exi
 
 Set-theoretic symbol: the single binary relation symbol $\in$.
 
+$A$ set, $\emptyset \subseteq A$ is vacuously true. $\emptyset$ can be an element of $A$.
+
 # **Notation**
 
-Algebraic structure: set equipped with one or more operations and rules.
+**ordered pair**: $(a,b) := \{\{a\}, \{a,b\}\}$  
+ternary: $(a,b,c) =((a,b),c)$
+
+**Cartesian product**: $A\times B := \{(a,b) | a \in A \land b \in B \}$
+
+(binary) **relation**, $R \subseteq A \times B$
+
+**function**, single-valued *relation*
+
+**operation**, function $A^n \to A$
 
 Relational structure: set equipped with one or more relations and rules.
+
+Algebraic structure: set equipped with one or more operations and rules.
 
 $|A| \equiv \text{det}A$
 
@@ -21,10 +34,6 @@ Symbol Name: 	Prime
 Html Entity: 	`&prime;`
 Hex Code: `&#x2032;`
 Decimal Code: 	`&#8242`;
-
-## Set Theory
-
-$A$ set, $\emptyset \subseteq A$ is vacuously true. $\emptyset$ can be an element of $A$.
 
 ## Real Numbers
 
