@@ -27,8 +27,6 @@ Relational structure: set equipped with one or more relations and rules.
 
 Algebraic structure: set equipped with one or more operations and rules.
 
-$|A| \equiv \text{det}A$
-
 `′ &prime;`
 Symbol Name: 	Prime
 Html Entity: 	`&prime;`
@@ -99,10 +97,28 @@ Leibniz notation: $\frac{df}{dx}(a) = \frac{df(x)}{dx}|_{x=a}$
 
 A function is **differentiable** if it is differentiable at all points in its domain.
 
+# Matrix
+
+**unitary**: $U^* U=UU^* =I$
+
+$|A| \equiv \text{det}A$
+
+# Representation Theory
+
 $$\zeta_n:=e^{2π\mathrm{i}/n}=\cos\frac{⁡2π}{n}+\mathrm{i}\sin\frac{⁡2π}{n}$$
 It is a **primitive n-th root of unity**
 
-**unitary**: $U^* U=UU^* =I$
+$\mathbb{C}^{\times} = \mathbb{C}\setminus \{0\}$, multiplicative group of nonzero complex numbers.
+
+$\mathbb{C}^{\times} \cong \text{GL}(1, \mathbb{C})$, general linear group of invertible 1x1 complex matrices.
+
+$C_n = \{1, \zeta_n, \zeta_n^2, \ldots, \zeta_n^{n-1}\} \in \mathbb{C}^\times$ is a finite cyclic group of order $n$ under multiplication.
+
+A 1-dimensional representation of any group $G$ is a homomorphism $\rho : G \to \mathbb{C}^\times$
+
+embedding, $\rho(\zeta_n^k) = \zeta_n^k$
+
+---
 
 Complex Exponential $\mathrm{e}^{\mathrm{i} 2 \pi f_0 t}$, reverse Fourier transform of the Dirac delta function.
 
