@@ -23,9 +23,11 @@ ternary: $(a,b,c) =((a,b),c)$
 
 **operation**, function $A^n \to A$
 
-Relational structure: set equipped with one or more relations and rules.
+Relational structure: set + relations + rules.
 
-Algebraic structure: set equipped with one or more operations and rules.
+Algebraic structure: set + operations + rules.
+
+Topological structure: set + a topology $\tau$ + rules
 
 `′ &prime;`
 Symbol Name: 	Prime
@@ -117,6 +119,8 @@ $C_n = \{1, \zeta_n, \zeta_n^2, \ldots, \zeta_n^{n-1}\} \in \mathbb{C}^\times$ i
 A 1-dimensional representation of any group $G$ is a homomorphism $\rho : G \to \mathbb{C}^\times$
 
 embedding, $\rho(\zeta_n^k) = \zeta_n^k$
+
+A **representation** of a group $G$ is a homomorphism $\rho : G  \to \text{GL}(V)$ that makes the group's elements into linear transformations on a vector space $V$.
 
 ---
 
