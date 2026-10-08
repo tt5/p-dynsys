@@ -1,4 +1,5 @@
 .ipynb_checkpoints
+**/*.npy
 Untitled*
 test-output
 *.png

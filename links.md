@@ -5,6 +5,9 @@ https://www.youtube.com/watch?v=_l9PDjqQSII
 Lenia:
 https://www.youtube.com/watch?v=10gFQXNqus8
 
+complex numbers and qm
+https://www.youtube.com/watch?v=HrlO0OMQmTs
+
 # Sandpiles
 
 https://www.youtube.com/@harmonicsandpiledynamics6887
