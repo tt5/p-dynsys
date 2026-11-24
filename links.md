@@ -8,6 +8,9 @@ https://www.youtube.com/watch?v=10gFQXNqus8
 complex numbers and qm
 https://www.youtube.com/watch?v=HrlO0OMQmTs
 
+qrm
+https://www.johndcook.com/blog/2026/10/07/consequences-of-qrh/
+
 # Sandpiles
 
 https://www.youtube.com/@harmonicsandpiledynamics6887
